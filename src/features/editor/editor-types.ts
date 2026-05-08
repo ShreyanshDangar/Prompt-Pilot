@@ -8,8 +8,3 @@ export interface EditorTab {
   isDirty: boolean
   isRenamed: boolean
 }
-
-export interface EditorState {
-  tabs: EditorTab[]
-  activeTabId: string
-}
