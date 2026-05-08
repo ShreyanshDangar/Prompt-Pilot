@@ -42,6 +42,8 @@ interface EditorStore {
   getActiveTab: () => EditorTab | undefined
   updateTabTheme: (id: string, theme: string) => void
   getText: () => string
+  skipDirtyCloseConfirm: boolean
+  setSkipDirtyCloseConfirm: (v: boolean) => void
 }
 
 const initialTab = createTab(1)
@@ -50,8 +52,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   tabs: [initialTab],
   activeTabId: initialTab.id,
   editor: null,
+  skipDirtyCloseConfirm: false,
 
   setEditor: (editor) => set({ editor }),
+
+  setSkipDirtyCloseConfirm: (v) => set({ skipDirtyCloseConfirm: v }),
 
   setActiveTab: (id) => set({ activeTabId: id }),
 
