@@ -28,6 +28,12 @@ export type StoredSetting<T = unknown> = {
   value: T
 }
 
+// Well-known keys for the settings object store.
+export const SETTING_VOLUME = "volume"
+export const SETTING_SHUFFLE = "shuffle"
+export const SETTING_REPEAT = "repeat"
+export const SETTING_TRACK_ORDER = "trackOrder"
+
 const DB_NAME = "prompt-pilot-music-player"
 const DB_VERSION = 2
 const AUDIO_STORE = "audio-files"
