@@ -1,291 +1,12 @@
 import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { X, FolderPlus, FilePlus, Folder, FileText, Trash2, Star,
-  Search, ChevronRight, Pencil, Check, Plus } from "lucide-react"
+import { X, FolderPlus, FilePlus, FileText, Trash2, Star,
+  Search, ChevronRight } from "lucide-react"
 import { useProjectsStore } from "./projects-store"
-import { ConfirmDialog } from "@/components/ConfirmDialog"
+import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
+import { GalleryModal } from "@/components/modals/GalleryModal"
+import { FolderRow } from "./FolderRow"
+import { ProjectDetail } from "./ProjectDetail"
 import { toast } from "sonner"
-import type { ProjectFolder } from "./projects-types"
-
-function ProjectDetail() {
-  const projects = useProjectsStore((s) => s.projects)
-  const selectedProjectId = useProjectsStore((s) => s.selectedProjectId)
-  const updateProject = useProjectsStore((s) => s.updateProject)
-  const addPromptVersion = useProjectsStore((s) => s.addPromptVersion)
-  const project = projects.find((p) => p.id === selectedProjectId)
-  const [showVersionInput, setShowVersionInput] = useState(false)
-  const [versionText, setVersionText] = useState("")
-
-  if (!project) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-sm text-text-muted">
-        Select a project to view details
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-1 flex-col overflow-y-auto p-4 scrollbar-thin">
-      <h3 className="mb-1 text-lg font-semibold text-text-primary">
-        {project.name}
-      </h3>
-      <div className="mb-4 flex items-center gap-2 text-xs text-text-muted">
-        <span className="rounded bg-bg-secondary px-2 py-0.5">{project.status}</span>
-        <span>{new Date(project.updatedAt).toLocaleDateString()}</span>
-      </div>
-
-      <div className="mb-4">
-        <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-          Rating
-        </label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              onClick={() => updateProject(project.id, { rating: star })}
-              className="transition-transform hover:scale-110"
-              aria-label={`Rate ${star} stars`}
-            >
-              <Star
-                className={`h-5 w-5 ${star <= project.rating
-                    ? "fill-warning text-warning"
-                    : "text-text-muted"
-                  }`}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-          Output Summary
-        </label>
-        <textarea
-          value={project.outputSummary}
-          onChange={(e) =>
-            updateProject(project.id, { outputSummary: e.target.value })
-          }
-          rows={3}
-          className="w-full resize-y rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent"
-          placeholder="Summarize the AI response..."
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-          What Worked
-        </label>
-        <textarea
-          value={project.whatWorked}
-          onChange={(e) =>
-            updateProject(project.id, { whatWorked: e.target.value })
-          }
-          rows={2}
-          className="w-full resize-y rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent"
-          placeholder="What produced good results..."
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-          What Didn't Work
-        </label>
-        <textarea
-          value={project.whatDidntWork}
-          onChange={(e) =>
-            updateProject(project.id, { whatDidntWork: e.target.value })
-          }
-          rows={2}
-          className="w-full resize-y rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent"
-          placeholder="What needs improvement..."
-        />
-      </div>
-
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-text-secondary">
-          General Notes
-        </label>
-        <textarea
-          value={project.notes}
-          onChange={(e) =>
-            updateProject(project.id, { notes: e.target.value })
-          }
-          rows={3}
-          className="w-full resize-y rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent"
-          placeholder="Additional notes..."
-        />
-      </div>
-
-      <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="text-xs font-medium text-text-secondary">
-            {project.promptVersions.length} version{project.promptVersions.length !== 1 ? "s" : ""}
-          </div>
-          <button
-            onClick={() => setShowVersionInput((v) => !v)}
-            className="flex items-center gap-1 rounded-md bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent transition-colors hover:bg-accent/20"
-            aria-label="Add prompt version"
-          >
-            <Plus className="h-3 w-3" />
-            Add version
-          </button>
-        </div>
-        {showVersionInput && (
-          <div className="mb-2 flex flex-col gap-1.5">
-            <textarea
-              value={versionText}
-              onChange={(e) => setVersionText(e.target.value)}
-              rows={3}
-              className="w-full resize-y rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs text-text-primary outline-none focus:border-accent"
-              placeholder="Paste prompt text for this version..."
-            />
-            <div className="flex justify-end gap-1">
-              <button
-                onClick={() => {
-                  setShowVersionInput(false)
-                  setVersionText("")
-                }}
-                className="rounded px-2 py-0.5 text-xs text-text-muted hover:bg-bg-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (versionText.trim()) {
-                    addPromptVersion(project.id, versionText.trim())
-                    setVersionText("")
-                    setShowVersionInput(false)
-                    toast.success("Version added")
-                  }
-                }}
-                className="rounded bg-accent px-2 py-0.5 text-xs text-white hover:bg-accent-hover"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-        <div className="space-y-1">
-          {project.promptVersions.map((v, idx) => (
-            <div
-              key={v.id}
-              className="group flex items-start gap-2 rounded-md border border-border bg-bg-primary px-2.5 py-1.5"
-            >
-              <span className="mt-0.5 shrink-0 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
-                v{idx + 1}
-              </span>
-              <span className="flex-1 truncate text-xs text-text-secondary">
-                {v.text}
-              </span>
-              <button
-                onClick={() =>
-                  updateProject(project.id, {
-                    promptVersions: project.promptVersions.filter((pv) => pv.id !== v.id),
-                  })
-                }
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
-                aria-label="Remove version"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function FolderRow({
-  folder,
-  isSelected,
-  onSelect,
-  onRequestDelete,
-}: {
-  folder: ProjectFolder
-  isSelected: boolean
-  onSelect: () => void
-  onRequestDelete: () => void
-}) {
-  const renameFolder = useProjectsStore((s) => s.renameFolder)
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(folder.name)
-
-  const commit = () => {
-    const trimmed = draft.trim()
-    if (trimmed && trimmed !== folder.name) {
-      renameFolder(folder.id, trimmed)
-      toast.success("Folder renamed")
-    }
-    setEditing(false)
-  }
-
-  if (editing) {
-    return (
-      <div className="group flex items-center gap-1 px-3 py-1.5">
-        <Folder className="h-3.5 w-3.5 shrink-0 text-text-muted" />
-        <input
-          type="text"
-          value={draft}
-          autoFocus
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit()
-            if (e.key === "Escape") {
-              setDraft(folder.name)
-              setEditing(false)
-            }
-          }}
-          className="min-w-0 flex-1 rounded border border-border bg-bg-secondary px-1 py-0.5 text-xs text-text-primary focus:border-accent focus:outline-none"
-        />
-        <button
-          onClick={commit}
-          className="flex h-4 w-4 items-center justify-center rounded text-text-muted hover:text-accent"
-          aria-label="Save name"
-        >
-          <Check className="h-3 w-3" />
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="group flex items-center">
-      <button
-        onClick={onSelect}
-        className={`flex flex-1 items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-          isSelected
-            ? "bg-accent/10 text-accent"
-            : "text-text-secondary hover:bg-bg-secondary"
-        }`}
-      >
-        <Folder className="h-3.5 w-3.5" />
-        <span className="truncate">{folder.name}</span>
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          setDraft(folder.name)
-          setEditing(true)
-        }}
-        className="mr-0.5 flex h-5 w-5 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:bg-bg-secondary hover:text-accent group-hover:opacity-100"
-        aria-label={`Rename ${folder.name}`}
-        title="Rename folder"
-      >
-        <Pencil className="h-3 w-3" />
-      </button>
-      <button
-        onClick={onRequestDelete}
-        className="mr-1 flex h-5 w-5 items-center justify-center rounded opacity-0 transition-opacity hover:bg-error/10 group-hover:opacity-100"
-        aria-label={`Delete ${folder.name}`}
-      >
-        <Trash2 className="h-3 w-3 text-error" />
-      </button>
-    </div>
-  )
-}
 
 export function ProjectsPage() {
   const isOpen = useProjectsStore((s) => s.isOpen)
@@ -316,15 +37,6 @@ export function ProjectsPage() {
   useEffect(() => {
     initialize()
   }, [initialize])
-
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [isOpen, setOpen])
 
   useEffect(() => {
     if (isOpen) {
@@ -358,25 +70,11 @@ export function ProjectsPage() {
 
   return (
     <>
-    <AnimatePresence>
-      {isOpen && (
-      <motion.div
-        key="projects-modal"
-        className="fixed inset-0 z-40 flex items-center justify-center bg-bg-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
-        onClick={() => setOpen(false)}
+      <GalleryModal
+        open={isOpen}
+        onClose={() => setOpen(false)}
+        ariaLabel="Projects"
       >
-        <motion.div
-          className="panel-surface flex h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border shadow-xl"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          onClick={(e) => e.stopPropagation()}
-        >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div>
               <h2 className="text-lg font-semibold text-text-primary">
@@ -550,10 +248,7 @@ export function ProjectsPage() {
 
             <ProjectDetail />
           </div>
-        </motion.div>
-      </motion.div>
-      )}
-    </AnimatePresence>
+      </GalleryModal>
     <ConfirmDialog
       open={folderPendingDelete !== null}
       title={pendingFolder ? `Delete "${pendingFolder.name}"?` : "Delete folder?"}
