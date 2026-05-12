@@ -1,4 +1,4 @@
-import { resolveFontFamily } from "@/lib/fonts";
+import { resolveFontFamily } from "@/lib/theme/fonts";
 
 export interface KeyboardColorPreset {
   id: string;
