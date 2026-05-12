@@ -1,10 +1,10 @@
 import { useEffect, memo } from "react"
 import { useKeyboardStore } from "../keyboard-store"
 import { useGlobalStore } from "@/stores/global-store"
-import { useCanvasVideo } from "../useCanvasVideo"
-import { getKeyController } from "../VideoFrameController"
-import type { KeySizeCategory } from "../VideoFrameController"
-import { getThemeVideoPath, type ThemeVideoSlot } from "@/lib/theme-video-manager"
+import { useCanvasVideo } from "./useCanvasVideo"
+import { getKeyController } from "./VideoFrameController"
+import type { KeySizeCategory } from "./VideoFrameController"
+import { getThemeVideoPath, type ThemeVideoSlot } from "@/lib/theme/theme-video"
 import { useKeyState } from "../useKeyState"
 
 const MEDIUM_KEYS = new Set([
