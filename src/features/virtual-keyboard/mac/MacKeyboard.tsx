@@ -5,7 +5,8 @@ import { IconBrightnessDown, IconBrightnessUp, IconCaretDownFilled, IconCaretLef
   IconPlayerTrackPrev, IconSearch, IconTable, IconVolume, IconVolume2, IconVolume3, IconWorld, IconBrandWindows
 } from "@tabler/icons-react"
 import { cn } from "@/lib/cn"
-import { Key, KeyboardProvider, ModifierKey, OptionKey } from "./MacKeyboardKeys"
+import { Key, ModifierKey, OptionKey } from "./MacKeyboardKeys"
+import { KeyboardProvider } from "./mac-keyboard-provider"
 import { useKeyboardSound } from "./mac-keyboard-context"
 import { getKeyDisplayLabel } from "./mac-keyboard-sounds"
 import { useKeyboardStore } from "../keyboard-store"
