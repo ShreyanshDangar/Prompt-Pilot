@@ -3,10 +3,10 @@ import { useKeyboardStore } from "./keyboard-store"
 import { useGlobalStore } from "@/stores/global-store"
 import { ThemeVideo } from "@/components/ThemeVideo"
 import { MacKeyboard } from "./mac/MacKeyboard"
-import { WordPreview } from "./mac/WordPreview"
+import { WordPreview } from "./WordPreview"
 import { LegacyKeyboard } from "./legacy/LegacyKeyboard"
-import { KeyboardSettingsPopover } from "./KeyboardSettingsPopover"
-import { KeyboardCustomizePopover } from "./KeyboardCustomizePopover"
+import { KeyboardSettingsPopover } from "./popovers/KeyboardSettingsPopover"
+import { KeyboardCustomizePopover } from "./popovers/KeyboardCustomizePopover"
 
 export function VirtualKeyboard() {
   const isVisible = useKeyboardStore((s) => s.isVisible)
