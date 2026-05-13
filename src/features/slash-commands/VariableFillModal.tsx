@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { extractVariables, resolveVariables } from "./variable-utils"
+import { useEscapeKey } from "@/hooks/useEscapeKey"
 
 interface VariableFillModalProps {
   commandName: string
@@ -26,13 +27,7 @@ export function VariableFillModal({
     onResolve(resolved)
   }
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel()
-    }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [onCancel])
+  useEscapeKey(onCancel, true, document)
 
   const allFilled = variables.every((v) => values[v]?.trim())
 
