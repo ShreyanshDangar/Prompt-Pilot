@@ -7,6 +7,8 @@ import { VariableFillModal } from "./VariableFillModal"
 import { extractVariables } from "./variable-utils"
 import { useGlobalStore } from "@/stores/global-store"
 import { useProjectsStore } from "@/features/projects/projects-store"
+import { textToParagraphNodes } from "@/features/editor/editor-insert"
+import { getCursorPopoverPosition } from "@/features/editor/editor-popover-position"
 import type { SlashCommand } from "./slash-types"
 
 interface SlashCommandPopoverProps {
@@ -41,28 +43,11 @@ export const SlashCommandPopover = forwardRef<
   }, [selectedIndex])
 
   const updatePosition = useCallback(() => {
-    try {
-      const { view } = editor
-      if (!view || !view.dom) return
-      const pos = slashPos !== null ? Math.min(slashPos + 1, view.state.doc.content.size) : view.state.selection.from
-      const coords = view.coordsAtPos(pos)
-      let top = coords.bottom + 4
-      let left = coords.left
-      const popoverHeight = 320
-      const popoverWidth = 288
-      if (top + popoverHeight > window.innerHeight) {
-        top = coords.top - popoverHeight - 4
-      }
-      if (left + popoverWidth > window.innerWidth) {
-        left = window.innerWidth - popoverWidth - 8
-      }
-      left = Math.max(8, left)
-      top = Math.max(8, top)
-
-      setPosition({ top, left })
-    } catch {
-      setPosition({ top: 100, left: 16 })
-    }
+    const next = getCursorPopoverPosition(editor, slashPos, {
+      width: 288,
+      height: 320,
+    })
+    if (next) setPosition(next)
   }, [editor, slashPos])
 
   const close = useCallback(() => {
@@ -111,12 +96,7 @@ export const SlashCommandPopover = forwardRef<
         const chain = editor.chain().focus().deleteRange(range)
 
         if (slashInsertionMode === "block") {
-          const paragraphs = command.content.split("\n").filter(Boolean)
-          const nodes = paragraphs.map((p) => ({
-            type: "paragraph" as const,
-            content: [{ type: "text" as const, text: p }],
-          }))
-          chain.insertContent(nodes)
+          chain.insertContent(textToParagraphNodes(command.content))
         } else {
           chain.insertContent(command.content)
         }
