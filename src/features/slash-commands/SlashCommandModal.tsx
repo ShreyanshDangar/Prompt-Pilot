@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useSlashStore } from "./slash-store"
 import { BUILT_IN_NAMES } from "./built-in-commands"
+import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { toast } from "sonner"
 
 export function SlashCommandModal() {
@@ -31,13 +32,7 @@ export function SlashCommandModal() {
     nameInputRef.current?.focus()
   }, [])
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeCreateModal()
-    }
-    window.addEventListener("keydown", handleEsc)
-    return () => window.removeEventListener("keydown", handleEsc)
-  }, [closeCreateModal])
+  useEscapeKey(closeCreateModal)
 
   const handleSave = () => {
     const trimmedName = name.trim()
