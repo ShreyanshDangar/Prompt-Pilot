@@ -2,8 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Slash, Plus, PenLine, X } from "lucide-react";
 import { useSlashStore } from "./slash-store";
-import { GalleryModal } from "@/components/GalleryModal";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { GalleryModal } from "@/components/modals/GalleryModal";
+import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import { toast } from "sonner";
 
 interface SlashCommandGalleryProps {
