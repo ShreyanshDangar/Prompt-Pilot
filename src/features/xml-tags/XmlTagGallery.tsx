@@ -5,8 +5,8 @@ import { useXmlTagsStore } from "./xml-tags-store"
 import { XML_TAG_CATEGORIES } from "./xml-tag-data"
 import type { XmlTag } from "./xml-tag-data"
 import { toast } from "sonner"
-import { GalleryModal } from "@/components/GalleryModal"
-import { ConfirmDialog } from "@/components/ConfirmDialog"
+import { GalleryModal } from "@/components/modals/GalleryModal"
+import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
 
 function TagCard({
   tag,
