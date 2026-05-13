@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import type { Editor } from "@tiptap/react"
 import { Tag } from "lucide-react"
 import { useXmlTagsStore } from "./xml-tags-store"
+import { getCursorPopoverPosition } from "@/features/editor/editor-popover-position"
 import type { XmlTag } from "./xml-tag-data"
 
 interface XmlTagAutocompletePopoverProps {
@@ -32,31 +33,11 @@ export const XmlTagAutocompletePopover = forwardRef<
   }, [selectedIndex])
 
   const updatePosition = useCallback(() => {
-    try {
-      const { view } = editor
-      if (!view || !view.dom) return
-      const pos =
-        triggerPos !== null
-          ? Math.min(triggerPos + 1, view.state.doc.content.size)
-          : view.state.selection.from
-      const coords = view.coordsAtPos(pos)
-      let top = coords.bottom + 4
-      let left = coords.left
-      const popoverHeight = 320
-      const popoverWidth = 288
-      if (top + popoverHeight > window.innerHeight) {
-        top = coords.top - popoverHeight - 4
-      }
-      if (left + popoverWidth > window.innerWidth) {
-        left = window.innerWidth - popoverWidth - 8
-      }
-      left = Math.max(8, left)
-      top = Math.max(8, top)
-
-      setPosition({ top, left })
-    } catch {
-      setPosition({ top: 100, left: 16 })
-    }
+    const next = getCursorPopoverPosition(editor, triggerPos, {
+      width: 288,
+      height: 320,
+    })
+    if (next) setPosition(next)
   }, [editor, triggerPos])
 
   const close = useCallback(() => {
