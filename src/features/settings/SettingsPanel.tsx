@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { X, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { useGlobalStore } from "@/stores/global-store";
-import { CenteredModal } from "@/components/CenteredModal";
+import { CenteredModal } from "@/components/modals/CenteredModal";
 
 export function SettingsPanel() {
   const settingsPanelOpen = useGlobalStore((s) => s.settingsPanelOpen);
@@ -17,15 +17,6 @@ export function SettingsPanel() {
   const closePanel = useCallback(() => {
     setSettingsPanelOpen(false);
   }, [setSettingsPanelOpen]);
-
-  useEffect(() => {
-    if (!settingsPanelOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closePanel();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [settingsPanelOpen, closePanel]);
 
   const handleAddRule = useCallback(() => {
     if (newRuleFrom.trim() && newRuleTo.trim()) {
