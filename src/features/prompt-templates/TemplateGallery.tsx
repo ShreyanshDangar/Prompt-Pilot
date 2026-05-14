@@ -4,7 +4,7 @@ import { TEMPLATES, TEMPLATE_CATEGORIES } from "./template-data"
 import type { PromptTemplate } from "./template-data"
 import { useSlashStore } from "@/features/slash-commands/slash-store"
 import { toast } from "sonner"
-import { GalleryModal } from "@/components/GalleryModal"
+import { GalleryModal } from "@/components/modals/GalleryModal"
 
 interface TemplateGalleryProps {
   isOpen: boolean
