@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useRef, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ExternalLink, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { useEditorStore } from "@/features/editor/editor-store"
+import { useClickOutside } from "@/hooks/useClickOutside"
 import { PROVIDERS, MAX_URL_LENGTH, type Provider } from "./providers"
 
 export function OpenInDropdown() {
@@ -10,20 +11,7 @@ export function OpenInDropdown() {
   const getText = useEditorStore((s) => s.getText)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isOpen])
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen)
 
   const handleOpenIn = useCallback(
     async (provider: Provider) => {
