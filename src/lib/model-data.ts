@@ -92,3 +92,7 @@ export function estimateTokens(text: string, charsPerToken: number): number {
   if (!text) return 0
   return Math.ceil(text.length / charsPerToken)
 }
+
+export function estimateImageTokens(width: number, height: number): number {
+  return Math.ceil((width * height) / 750)
+}
