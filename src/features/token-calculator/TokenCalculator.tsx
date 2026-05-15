@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, AlertTriangle, XCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEditorStore } from "@/features/editor/editor-store"
-import { useImageStore } from "@/stores/image-store"
-import { MODELS, PROVIDERS, getModelById, estimateTokens } from "@/lib/model-data"
+import { useImageStore } from "@/features/images/image-store"
+import {
+  MODELS,
+  PROVIDERS,
+  getModelById,
+  estimateTokens,
+  estimateImageTokens,
+} from "@/lib/model-data"
 import { useGlobalStore } from "@/stores/global-store"
-
-function estimateImageTokens(width: number, height: number): number {
-  return Math.ceil((width * height) / 750)
-}
+import { useClickOutside } from "@/hooks/useClickOutside"
+import { useEscapeKey } from "@/hooks/useEscapeKey"
 
 function ContextVisualizer({
   textTokens,
@@ -76,29 +80,12 @@ export function TokenCalculator() {
   const [mobileExpanded, setMobileExpanded] = useState(false)
   const modelDropdownRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!modelDropdownOpen) return
-    const handlePointerDown = (e: MouseEvent) => {
-      const target = e.target as Node | null
-      if (!target) return
-      if (
-        modelDropdownRef.current &&
-        modelDropdownRef.current.contains(target)
-      ) {
-        return
-      }
-      setModelDropdownOpen(false)
-    }
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setModelDropdownOpen(false)
-    }
-    document.addEventListener("mousedown", handlePointerDown)
-    document.addEventListener("keydown", handleKey)
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown)
-      document.removeEventListener("keydown", handleKey)
-    }
-  }, [modelDropdownOpen])
+  useClickOutside(
+    modelDropdownRef,
+    () => setModelDropdownOpen(false),
+    modelDropdownOpen,
+  )
+  useEscapeKey(() => setModelDropdownOpen(false), modelDropdownOpen, document)
 
   const model = useMemo(
     () => getModelById(selectedModelId) ?? MODELS[0],
