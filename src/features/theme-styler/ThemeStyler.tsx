@@ -1,9 +1,12 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, ChevronDown } from "lucide-react";
-import { useGlobalStore, DEFAULT_THEME_STYLES } from "@/stores/global-store";
-import type { ThemeStyleSettings } from "@/stores/global-store";
-import { getThemeFontOptions } from "@/lib/fonts";
+import { useGlobalStore } from "@/stores/global-store";
+import {
+  DEFAULT_THEME_STYLES,
+  type ThemeStyleSettings,
+} from "@/lib/theme/theme-registry";
+import { getThemeFontOptions } from "@/lib/theme/fonts";
 
 const THEME_COLOR_PRESETS: Record<string, string[]> = {
   default: ["#f9fafb", "#818cf8", "#a1a1aa", "#10b981", "#f59e0b"],
