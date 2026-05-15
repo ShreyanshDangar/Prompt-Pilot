@@ -2,19 +2,11 @@ import { useEffect, useRef } from "react"
 import { getFromIDB, setToIDB } from "@/lib/storage"
 import { SESSION_KEY, AUTOSAVE_INTERVAL_MS } from "@/lib/constants"
 import { useEditorStore } from "@/features/editor/editor-store"
+import type { EditorTab } from "@/features/editor/editor-types"
 import { useGlobalStore } from "@/stores/global-store"
 
 interface SessionData {
-  tabs: {
-    id: string
-    name: string
-    content: string
-    theme: string
-    cursorPosition: number
-    scrollPosition: number
-    isDirty: boolean
-    isRenamed?: boolean
-  }[]
+  tabs: EditorTab[]
   activeTabId: string
   sidebarOpen: boolean
 }
