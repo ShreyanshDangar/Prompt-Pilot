@@ -1,74 +1,20 @@
 import { create } from "zustand";
 import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage";
 import { STORAGE_KEYS } from "@/lib/constants";
-import { resolveFontFamily } from "@/lib/fonts";
+import { resolveFontFamily } from "@/lib/theme/fonts";
+import {
+  THEME_CLASSES,
+  THEME_BG_CLASSES,
+  DEFAULT_THEME_STYLES,
+  type WebsiteTheme,
+  type ThemeStyleSettings,
+} from "@/lib/theme/theme-registry";
 import { shouldDefaultOpenLeftPanel, shouldDefaultOpenRightPanel } from "@/lib/panel-breakpoints";
 
-interface AutoCorrectRule {
+export interface AutoCorrectRule {
   from: string;
   to: string;
 }
-
-type WebsiteTheme =
-  | "default"
-  | "aurora"
-  | "cyber"
-  | "zen"
-  | "writer"
-  | "neural";
-
-export interface ThemeStyleSettings {
-  fontFamily: string;
-  fontSize: number;
-  fontColor: string;
-  lineHeight: number;
-  letterSpacing: number;
-}
-
-export const DEFAULT_THEME_STYLES: Record<string, ThemeStyleSettings> = {
-  default: {
-    fontFamily: "Inter",
-    fontSize: 16,
-    fontColor: "#f9fafb",
-    lineHeight: 1.6,
-    letterSpacing: 0,
-  },
-  aurora: {
-    fontFamily: "Inter",
-    fontSize: 16,
-    fontColor: "#e8edf5",
-    lineHeight: 1.6,
-    letterSpacing: 0,
-  },
-  cyber: {
-    fontFamily: "JetBrains Mono",
-    fontSize: 15,
-    fontColor: "#00f0ff",
-    lineHeight: 1.5,
-    letterSpacing: 0.5,
-  },
-  zen: {
-    fontFamily: "Georgia",
-    fontSize: 17,
-    fontColor: "#13200f",
-    lineHeight: 1.8,
-    letterSpacing: 0,
-  },
-  writer: {
-    fontFamily: "Georgia",
-    fontSize: 17,
-    fontColor: "#170a05",
-    lineHeight: 1.8,
-    letterSpacing: 0.2,
-  },
-  neural: {
-    fontFamily: "Inter",
-    fontSize: 16,
-    fontColor: "#e0e8f8",
-    lineHeight: 1.6,
-    letterSpacing: 0,
-  },
-};
 
 interface Settings {
   websiteTheme: WebsiteTheme;
@@ -138,24 +84,6 @@ const DEFAULT_SETTINGS: Settings = {
   themeLineHeight: 1.6,
   themeLetterSpacing: 0,
   perThemeStyles: { ...DEFAULT_THEME_STYLES },
-};
-
-const THEME_CLASSES: Record<WebsiteTheme, string> = {
-  default: "",
-  aurora: "theme-aurora",
-  cyber: "theme-cyber",
-  zen: "theme-zen",
-  writer: "theme-writer",
-  neural: "theme-neural",
-};
-
-const THEME_BG_CLASSES: Record<WebsiteTheme, string> = {
-  default: "",
-  aurora: "theme-bg-aurora",
-  cyber: "theme-bg-cyber",
-  zen: "theme-bg-zen",
-  writer: "theme-bg-writer",
-  neural: "theme-bg-neural",
 };
 
 interface GlobalState {
