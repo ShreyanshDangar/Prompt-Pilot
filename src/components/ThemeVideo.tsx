@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { useGlobalStore } from "@/stores/global-store"
-import { getThemeVideoPath, loadThemeVideoSrc, type ThemeVideoSlot } from "@/lib/theme-video-manager"
+import { getThemeVideoPath, loadThemeVideoSrc, type ThemeVideoSlot } from "@/lib/theme/theme-video"
 
 interface ThemeVideoProps {
   slot: ThemeVideoSlot
