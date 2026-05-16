@@ -11,14 +11,16 @@ import { SlashCommandModal } from "@/features/slash-commands/SlashCommandModal";
 import { SlashCommandGallery } from "@/features/slash-commands/SlashCommandGallery";
 import { useXmlTagsStore } from "@/features/xml-tags/xml-tags-store";
 import { ThemeVideo } from "@/components/ThemeVideo";
+import { SIDEBAR_WIDTH } from "@/lib/panel-breakpoints";
+import type { WebsiteTheme } from "@/lib/theme/theme-registry";
 
-const WEBSITE_THEMES = [
-  { id: "default" as const, label: "Modern", icon: Monitor },
-  { id: "aurora" as const, label: "Aurora Borealis", icon: Sparkles },
-  { id: "cyber" as const, label: "Neon Void", icon: Zap },
-  { id: "zen" as const, label: "Zen Forest", icon: Leaf },
-  { id: "writer" as const, label: "Vintage Writer", icon: PenLine },
-  { id: "neural" as const, label: "Neural Workspace", icon: BrainCircuit },
+const WEBSITE_THEMES: { id: WebsiteTheme; label: string; icon: typeof Monitor }[] = [
+  { id: "default", label: "Modern", icon: Monitor },
+  { id: "aurora", label: "Aurora Borealis", icon: Sparkles },
+  { id: "cyber", label: "Neon Void", icon: Zap },
+  { id: "zen", label: "Zen Forest", icon: Leaf },
+  { id: "writer", label: "Vintage Writer", icon: PenLine },
+  { id: "neural", label: "Neural Workspace", icon: BrainCircuit },
 ];
 
 interface SidebarNavItem {
@@ -49,8 +51,6 @@ export function Sidebar() {
 
   const isThemed = websiteTheme !== "default";
   const glassClass = isThemed ? "glass-panel" : "";
-
-  const SIDEBAR_WIDTH = 224;
 
   const navItems: SidebarNavItem[] = [
     {
