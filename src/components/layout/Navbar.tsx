@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import { useGlobalStore } from "@/stores/global-store"
 import { useMusicStore } from "@/features/music-player/music-store"
 import { APP_NAME } from "@/lib/constants"
-import { detectPhysicalPlatform } from "@/features/virtual-keyboard/platform-utils"
+import { detectPhysicalPlatform } from "@/lib/platform"
 
 const IS_MAC_PLATFORM = detectPhysicalPlatform() === "mac"
 
