@@ -13,6 +13,7 @@ import { useGlobalStore } from "@/stores/global-store";
 import { useMusicStore } from "@/features/music-player/music-store";
 import { useXmlTagsStore } from "@/features/xml-tags/xml-tags-store";
 import { useEditorStore } from "@/features/editor/editor-store";
+import { textToParagraphNodes } from "@/features/editor/editor-insert";
 import { ThemeVideo } from "@/components/ThemeVideo";
 import { getFromLocalStorage, setToLocalStorage, } from "@/lib/storage";
 import { STORAGE_KEYS } from "@/lib/constants";
@@ -115,12 +116,11 @@ export function AppShell() {
       const activeTab = tabs.find((t) => t.id === activeTabId);
       if (!activeTab) return;
       if (editor) {
-        const lines = tagText.split("\n");
-        const nodes = lines.map((line) => ({
-          type: "paragraph" as const,
-          content: line ? [{ type: "text" as const, text: line }] : [],
-        }));
-        editor.chain().focus().insertContent(nodes).run();
+        editor
+          .chain()
+          .focus()
+          .insertContent(textToParagraphNodes(tagText, { keepEmpty: true }))
+          .run();
         return;
       }
       const escape = (s: string) =>
