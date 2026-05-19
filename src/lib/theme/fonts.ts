@@ -28,8 +28,6 @@ const FONT_STACKS = {
 
 export type AppFontName = keyof typeof FONT_STACKS
 
-export const ALL_FONT_STACKS: Record<AppFontName, string> = FONT_STACKS
-
 export const THEME_FONT_OPTIONS: Record<string, AppFontName[]> = {
   default: [
     "Inter",
