@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { resolveFontFamily } from "@/lib/theme/fonts";
+import { ensureThemeFontsLoaded } from "@/lib/theme/font-loader";
 import {
   THEME_CLASSES,
   THEME_BG_CLASSES,
@@ -135,6 +136,8 @@ function applyThemeClasses(websiteTheme: WebsiteTheme) {
 }
 function applyThemeFont(settings: Settings) {
   const theme = settings.websiteTheme;
+  // Fetch the active theme's web fonts on demand (boot + every theme switch).
+  ensureThemeFontsLoaded(theme);
   const style =
     settings.perThemeStyles[theme] ??
     DEFAULT_THEME_STYLES[theme] ??
