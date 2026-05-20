@@ -1,6 +1,6 @@
 // Single source of truth for website-theme structural data: the theme id set,
-// the DOM class maps, the per-theme video folder, and the default editor styles.
-// Display strings (sidebar labels/icons, styler names + color presets) stay with
+// the canonical display name, the DOM class maps, the per-theme video folder, and
+// the default editor styles. Sidebar icons + the styler's color presets stay with
 // their components; keyboard appearance presets live in
 // features/virtual-keyboard/keyboard-presets.ts.
 
@@ -14,6 +14,17 @@ export const WEBSITE_THEME_IDS = [
 ] as const
 
 export type WebsiteTheme = (typeof WEBSITE_THEME_IDS)[number]
+
+// Canonical, user-facing label for each theme (consumed by the sidebar theme
+// picker and the theme styler). One name per theme so the two surfaces never drift.
+export const THEME_DISPLAY_NAMES: Record<WebsiteTheme, string> = {
+  default: "Modern",
+  aurora: "Aurora Borealis",
+  cyber: "Neon Void",
+  zen: "Zen Forest",
+  writer: "Vintage Writer",
+  neural: "Neural Workspace",
+}
 
 export interface ThemeStyleSettings {
   fontFamily: string
