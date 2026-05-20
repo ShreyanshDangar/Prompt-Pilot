@@ -1,13 +1,13 @@
-import { useState, useCallback } from "react"
+import { useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Copy, Check } from "lucide-react"
 import { toast } from "sonner"
 import { useEditorStore } from "./editor-store"
-import { COPY_FEEDBACK_DURATION_MS } from "@/lib/constants"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 
 export function CopyButton() {
-  const [copied, setCopied] = useState(false)
   const getText = useEditorStore((s) => s.getText)
+  const { copied, copy } = useCopyToClipboard()
 
   const handleCopy = useCallback(async () => {
     const text = getText()
@@ -15,15 +15,11 @@ export function CopyButton() {
       toast.error("Nothing to copy")
       return
     }
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      toast.success("Prompt copied to clipboard")
-      setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS)
-    } catch {
-      toast.error("Failed to copy to clipboard")
-    }
-  }, [getText])
+    await copy(text, {
+      successMessage: "Prompt copied to clipboard",
+      errorMessage: "Failed to copy to clipboard",
+    })
+  }, [getText, copy])
 
   return (
     <button
