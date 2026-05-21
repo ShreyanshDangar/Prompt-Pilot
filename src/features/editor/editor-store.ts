@@ -1,9 +1,10 @@
 import { create } from "zustand"
 import type { Editor as TiptapEditor } from "@tiptap/react"
+import { makeId } from "@/lib/id"
 import type { EditorTab } from "./editor-types"
 
 function createTab(index: number): EditorTab {
-  const id = crypto.randomUUID()
+  const id = makeId()
   return {
     id,
     name: `Prompt ${index}`,
