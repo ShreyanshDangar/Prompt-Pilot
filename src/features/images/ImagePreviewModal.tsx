@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import type { PromptImage } from "./image-types";
 
 export function ImagePreviewModal({
@@ -24,12 +25,14 @@ export function ImagePreviewModal({
     onNavigate((currentIndex + 1) % total);
   }, [currentIndex, onNavigate, total]);
 
+  useEscapeKey((e) => {
+    e.preventDefault();
+    onClose();
+  });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      } else if (e.key === "ArrowLeft") {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();
       } else if (e.key === "ArrowRight") {
@@ -39,7 +42,7 @@ export function ImagePreviewModal({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goPrev, goNext]);
+  }, [goPrev, goNext]);
 
   return (
     <motion.div
