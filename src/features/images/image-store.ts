@@ -1,20 +1,10 @@
 import { create } from "zustand"
 import { toast } from "sonner"
-import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage"
+import { getFromLocalStorage, safeSetLocalStorage } from "@/lib/storage"
 import { STORAGE_KEYS } from "@/lib/constants"
 import type { PromptImage } from "./image-types"
 
 const IMAGES_KEY = STORAGE_KEYS.IMAGES
-
-function isQuotaExceededError(error: unknown): boolean {
-  if (!(error instanceof DOMException)) return false
-  return (
-    error.name === "QuotaExceededError" ||
-    error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-    error.code === 22 ||
-    error.code === 1014
-  )
-}
 
 let quotaToastShown = false
 
@@ -27,21 +17,17 @@ interface ImageStore {
 }
 
 function persistImages(images: PromptImage[]) {
-  try {
-    setToLocalStorage(IMAGES_KEY, images)
-    quotaToastShown = false
-  } catch (error) {
-    if (isQuotaExceededError(error)) {
+  const ok = safeSetLocalStorage(IMAGES_KEY, images, {
+    onQuotaExceeded: () => {
       if (!quotaToastShown) {
         quotaToastShown = true
         toast.error(
           "Image storage is full. Newer images may not persist across reloads.",
         )
       }
-    } else {
-      console.error("Failed to persist images:", error)
-    }
-  }
+    },
+  })
+  if (ok) quotaToastShown = false
 }
 
 export const useImageStore = create<ImageStore>((set, get) => ({
