@@ -14,21 +14,21 @@ import { ThemeVideo } from "@/components/ThemeVideo";
 
 function CharWordCount() {
   const editor = useEditorStore((s) => s.editor);
-  const activeTabId = useEditorStore((s) => s.activeTabId);
+  // The active tab's stored content is the reactive recompute trigger: it changes
+  // on every edit and on tab switch. The displayed counts still come from the
+  // editor's plain text (TipTap's getText), since the stored content is HTML.
   const activeTabContent = useEditorStore(
     (s) => s.tabs.find((t) => t.id === s.activeTabId)?.content,
   );
 
   const { chars, words } = useMemo(() => {
-    if (!editor) return { chars: 0, words: 0 };
-    void activeTabId;
-    void activeTabContent;
+    if (!editor || activeTabContent === undefined) return { chars: 0, words: 0 };
     const text = editor.getText();
     return {
       chars: text.length,
       words: text.trim() ? text.trim().split(/\s+/).length : 0,
     };
-  }, [editor, activeTabId, activeTabContent]);
+  }, [editor, activeTabContent]);
 
   return (
     <span className="text-xs text-text-muted">
