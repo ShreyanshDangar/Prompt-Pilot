@@ -2,6 +2,7 @@ import { useRef, useState, useLayoutEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { useEditorStore } from "./editor-store";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
+import { usePendingConfirm } from "@/hooks/usePendingConfirm";
 
 function TabNameDisplay({
   name,
@@ -67,13 +68,11 @@ export function EditorTabBar() {
   );
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [pendingCloseTabId, setPendingCloseTabId] = useState<string | null>(
-    null,
-  );
+  const closeConfirm = usePendingConfirm();
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
-  const pendingTab = pendingCloseTabId
-    ? tabs.find((t) => t.id === pendingCloseTabId)
+  const pendingTab = closeConfirm.pendingId
+    ? tabs.find((t) => t.id === closeConfirm.pendingId)
     : null;
 
   const requestCloseTab = (tabId: string) => {
@@ -84,17 +83,17 @@ export function EditorTabBar() {
       return;
     }
     setDontAskAgain(false);
-    setPendingCloseTabId(tabId);
+    closeConfirm.request(tabId);
   };
 
   const confirmClose = () => {
     if (dontAskAgain) setSkipDirtyCloseConfirm(true);
-    if (pendingCloseTabId) closeTab(pendingCloseTabId);
-    setPendingCloseTabId(null);
+    if (closeConfirm.pendingId) closeTab(closeConfirm.pendingId);
+    closeConfirm.clear();
   };
 
   const cancelClose = () => {
-    setPendingCloseTabId(null);
+    closeConfirm.clear();
   };
 
   const handleDoubleClick = (tabId: string, currentName: string) => {
@@ -172,7 +171,7 @@ export function EditorTabBar() {
         <Plus className="h-4 w-4" />
       </button>
       <ConfirmDialog
-        open={pendingCloseTabId !== null}
+        open={closeConfirm.isOpen}
         title={pendingTab ? `Close "${pendingTab.name}"?` : "Close tab?"}
         destructive
         confirmLabel="Close tab"
