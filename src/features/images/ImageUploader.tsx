@@ -5,6 +5,7 @@ import { useImageStore } from "./image-store";
 import type { PromptImage } from "./image-types";
 import { ImagePreviewModal } from "./ImagePreviewModal";
 import { MAX_IMAGES } from "@/lib/constants";
+import { makeId } from "@/lib/id";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { toast } from "sonner";
 
@@ -60,7 +61,7 @@ export function ImageUploader({ compact }: { compact?: boolean }) {
                   reject(new Error(`Could not load ${file.name}`));
                 img.onload = () => {
                   resolve({
-                    id: crypto.randomUUID(),
+                    id: makeId(),
                     name: file.name,
                     dataUrl,
                     width: img.naturalWidth,
