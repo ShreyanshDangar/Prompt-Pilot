@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import type { SlashCommand } from "./slash-types"
 import { BUILT_IN_COMMANDS, BUILT_IN_NAMES } from "./built-in-commands"
-import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage"
+import { getFromLocalStorage, safeSetLocalStorage } from "@/lib/storage"
 import { STORAGE_KEYS } from "@/lib/constants"
 
 interface SlashStore {
@@ -54,7 +54,7 @@ export const useSlashStore = create<SlashStore>((set, get) => ({
     }
     const updated = [...get().userCommands, newCommand]
     set({ userCommands: updated })
-    setToLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
+    safeSetLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
     return true
   },
 
@@ -78,14 +78,14 @@ export const useSlashStore = create<SlashStore>((set, get) => ({
       c.name === name ? { ...c, ...updates } : c
     )
     set({ userCommands: updated })
-    setToLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
+    safeSetLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
     return true
   },
 
   deleteCommand: (name) => {
     const updated = get().userCommands.filter((c) => c.name !== name)
     set({ userCommands: updated })
-    setToLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
+    safeSetLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
   },
 
   incrementUsage: (name) => {
@@ -93,7 +93,7 @@ export const useSlashStore = create<SlashStore>((set, get) => ({
       c.name === name ? { ...c, usageCount: c.usageCount + 1 } : c
     )
     set({ userCommands: updated })
-    setToLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
+    safeSetLocalStorage(STORAGE_KEYS.SLASH_COMMANDS, updated)
   },
 
   searchCommands: (query) => {
