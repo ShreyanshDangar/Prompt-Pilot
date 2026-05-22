@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Slash, Plus, PenLine, X } from "lucide-react";
 import { useSlashStore } from "./slash-store";
 import { GalleryModal } from "@/components/modals/GalleryModal";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
+import { usePendingConfirm } from "@/hooks/usePendingConfirm";
 import { toast } from "sonner";
 
 interface SlashCommandGalleryProps {
@@ -26,9 +26,7 @@ export function SlashCommandGallery({ open, onClose }: SlashCommandGalleryProps)
   const getAllCommands = useSlashStore((s) => s.getAllCommands);
   const setEditingCommand = useSlashStore((s) => s.setEditingCommand);
   const deleteCommand = useSlashStore((s) => s.deleteCommand);
-  const [pendingDeleteName, setPendingDeleteName] = useState<string | null>(
-    null,
-  );
+  const deleteConfirm = usePendingConfirm();
 
   return (
     <>
@@ -118,7 +116,7 @@ export function SlashCommandGallery({ open, onClose }: SlashCommandGalleryProps)
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPendingDeleteName(cmd.name);
+                            deleteConfirm.request(cmd.name);
                           }}
                           className="rounded bg-bg-secondary p-1 text-[10px] text-text-muted hover:text-error"
                           title="Delete"
@@ -133,23 +131,23 @@ export function SlashCommandGallery({ open, onClose }: SlashCommandGalleryProps)
             </div>
     </GalleryModal>
     <ConfirmDialog
-      open={pendingDeleteName !== null}
+      open={deleteConfirm.isOpen}
       title={
-        pendingDeleteName
-          ? `Delete ${pendingDeleteName}?`
+        deleteConfirm.pendingId
+          ? `Delete ${deleteConfirm.pendingId}?`
           : "Delete slash command?"
       }
       destructive
       confirmLabel="Delete"
       message="This slash command will be permanently removed. This cannot be undone."
       onConfirm={() => {
-        if (pendingDeleteName) {
-          deleteCommand(pendingDeleteName);
+        if (deleteConfirm.pendingId) {
+          deleteCommand(deleteConfirm.pendingId);
           toast.success("Command deleted");
         }
-        setPendingDeleteName(null);
+        deleteConfirm.clear();
       }}
-      onCancel={() => setPendingDeleteName(null)}
+      onCancel={() => deleteConfirm.clear()}
     />
     </>
   );
