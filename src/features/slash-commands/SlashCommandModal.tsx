@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react"
-import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useSlashStore } from "./slash-store"
 import { BUILT_IN_NAMES } from "./built-in-commands"
-import { useEscapeKey } from "@/hooks/useEscapeKey"
+import { CenteredModal } from "@/components/modals/CenteredModal"
 import { toast } from "sonner"
 
 export function SlashCommandModal() {
@@ -31,8 +30,6 @@ export function SlashCommandModal() {
   useEffect(() => {
     nameInputRef.current?.focus()
   }, [])
-
-  useEscapeKey(closeCreateModal)
 
   const handleSave = () => {
     const trimmedName = name.trim()
@@ -77,13 +74,12 @@ export function SlashCommandModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay">
-      <motion.div
-        className="panel-surface w-full max-w-lg rounded-xl border border-border p-6 shadow-xl"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
+    <CenteredModal
+      open
+      onClose={closeCreateModal}
+      ariaLabel={editingCommand ? "Edit Command" : "Create Slash Command"}
+    >
+      <div className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">
             {editingCommand ? "Edit Command" : "Create Slash Command"}
@@ -191,7 +187,7 @@ export function SlashCommandModal() {
             </button>
           </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </CenteredModal>
   )
 }
