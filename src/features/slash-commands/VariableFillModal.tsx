@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react"
-import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { extractVariables, resolveVariables } from "./variable-utils"
-import { useEscapeKey } from "@/hooks/useEscapeKey"
+import { CenteredModal } from "@/components/modals/CenteredModal"
 
 interface VariableFillModalProps {
   commandName: string
@@ -27,18 +26,16 @@ export function VariableFillModal({
     onResolve(resolved)
   }
 
-  useEscapeKey(onCancel, true, document)
-
   const allFilled = variables.every((v) => values[v]?.trim())
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay">
-      <motion.div
-        className="panel-surface w-full max-w-md rounded-xl border border-border p-6 shadow-xl"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
+    <CenteredModal
+      open
+      onClose={onCancel}
+      ariaLabel="Fill Variables"
+      panelClassName="panel-surface w-full max-w-md overflow-hidden rounded-xl border border-border shadow-2xl"
+    >
+      <div className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">
@@ -93,7 +90,7 @@ export function VariableFillModal({
             Insert
           </button>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </CenteredModal>
   )
 }
