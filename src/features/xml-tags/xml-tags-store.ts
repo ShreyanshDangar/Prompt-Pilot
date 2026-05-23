@@ -1,5 +1,6 @@
 import { create } from "zustand"
-import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage"
+import { getFromLocalStorage, safeSetLocalStorage } from "@/lib/storage"
+import { makeId } from "@/lib/id"
 import { STORAGE_KEYS } from "@/lib/constants"
 import { BUILT_IN_XML_TAGS } from "./xml-tag-data"
 import type { XmlTag } from "./xml-tag-data"
@@ -35,19 +36,19 @@ export const useXmlTagsStore = create<XmlTagsStore>((set, get) => ({
     if (duplicate) return false
 
     const tag: XmlTag = {
-      id: `custom-${crypto.randomUUID()}`,
+      id: `custom-${makeId()}`,
       ...tagData,
     }
     const updated = [...get().customTags, tag]
     set({ customTags: updated })
-    setToLocalStorage(XML_TAGS_KEY, updated)
+    safeSetLocalStorage(XML_TAGS_KEY, updated)
     return true
   },
 
   removeCustomTag: (id) => {
     const updated = get().customTags.filter((t) => t.id !== id)
     set({ customTags: updated })
-    setToLocalStorage(XML_TAGS_KEY, updated)
+    safeSetLocalStorage(XML_TAGS_KEY, updated)
   },
 
   getAllTags: () => [...BUILT_IN_XML_TAGS, ...get().customTags],
