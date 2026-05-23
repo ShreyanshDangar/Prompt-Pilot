@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import type { Project, ProjectFolder, PromptVersion } from "./projects-types"
 import { getFromIDB, setToIDB } from "@/lib/storage"
+import { makeId } from "@/lib/id"
 import { STORAGE_KEYS } from "@/lib/constants"
 
 const PROJECTS_KEY = STORAGE_KEYS.PROJECTS
@@ -46,7 +47,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
 
   createFolder: (name) => {
     const folder: ProjectFolder = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       name,
       createdAt: Date.now(),
     }
@@ -73,7 +74,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
 
   createProject: (folderId, name) => {
     const project: Project = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       folderId,
       name,
       status: "draft",
@@ -112,7 +113,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
 
   addPromptVersion: (projectId, text) => {
     const version: PromptVersion = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       text,
       createdAt: Date.now(),
     }
