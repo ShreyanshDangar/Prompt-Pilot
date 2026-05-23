@@ -3,6 +3,8 @@ import { Plus } from "lucide-react"
 import { useChainingStore } from "./chaining-store"
 import type { PromptChain } from "./chaining-store"
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
+import { usePendingConfirm } from "@/hooks/usePendingConfirm"
+import { useDragReorder } from "@/hooks/useDragReorder"
 import { toast } from "sonner"
 import { ChainNode } from "./ChainNode"
 
@@ -11,44 +13,19 @@ export function ChainDetail({ chain }: { chain: PromptChain }) {
   const removeStep = useChainingStore((s) => s.removeStep)
   const reorderSteps = useChainingStore((s) => s.reorderSteps)
   const [newStepName, setNewStepName] = useState("")
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
-  const [pendingStepDelete, setPendingStepDelete] = useState<string | null>(null)
-  const pendingStep = pendingStepDelete
-    ? chain.steps.find((s) => s.id === pendingStepDelete) ?? null
+  const stepConfirm = usePendingConfirm()
+  const pendingStep = stepConfirm.pendingId
+    ? chain.steps.find((s) => s.id === stepConfirm.pendingId) ?? null
     : null
 
   const orderedSteps = [...chain.steps].sort((a, b) => a.order - b.order)
 
-  const handleDragStart = (i: number) => {
-    setDragIndex(i)
-  }
-  const handleDragOver = (i: number, e: React.DragEvent) => {
-    if (dragIndex === null) return
-    e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
-    if (dragOverIndex !== i) setDragOverIndex(i)
-  }
-  const handleDragLeave = () => {
-    setDragOverIndex(null)
-  }
-  const handleDrop = (toIndex: number) => {
-    if (dragIndex === null || dragIndex === toIndex) {
-      setDragIndex(null)
-      setDragOverIndex(null)
-      return
-    }
+  const drag = useDragReorder((from, to) => {
     const ids = orderedSteps.map((s) => s.id)
-    const [moved] = ids.splice(dragIndex, 1)
-    ids.splice(toIndex, 0, moved)
+    const [moved] = ids.splice(from, 1)
+    ids.splice(to, 0, moved)
     reorderSteps(chain.id, ids)
-    setDragIndex(null)
-    setDragOverIndex(null)
-  }
-  const handleDragEnd = () => {
-    setDragIndex(null)
-    setDragOverIndex(null)
-  }
+  })
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -61,23 +38,26 @@ export function ChainDetail({ chain }: { chain: PromptChain }) {
         </p>
       </div>
       <div className="flex flex-1 flex-wrap items-start gap-2 overflow-auto p-4 scrollbar-thin">
-        {orderedSteps.map((step, i) => (
+        {orderedSteps.map((step, i) => {
+          const dragProps = drag.getItemProps(i)
+          return (
             <ChainNode
               key={step.id}
               step={step}
               index={i}
               chainId={chain.id}
               isLast={i === orderedSteps.length - 1}
-              isDragging={dragIndex === i}
-              isDragOver={dragOverIndex === i && dragIndex !== i}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onDragEnd={handleDragEnd}
-              onRequestDelete={(id) => setPendingStepDelete(id)}
+              isDragging={drag.dragIndex === i}
+              isDragOver={drag.dragOverIndex === i && drag.dragIndex !== i}
+              onDragStart={() => dragProps.onDragStart()}
+              onDragOver={(_, e) => dragProps.onDragOver(e)}
+              onDragLeave={dragProps.onDragLeave}
+              onDrop={() => dragProps.onDrop()}
+              onDragEnd={dragProps.onDragEnd}
+              onRequestDelete={(id) => stepConfirm.request(id)}
             />
-          ))}
+          )
+        })}
         <div className="flex items-start">
           <div className="flex w-48 flex-col gap-2 rounded-lg border border-dashed border-border p-3">
             <input
@@ -109,19 +89,19 @@ export function ChainDetail({ chain }: { chain: PromptChain }) {
         </div>
       </div>
       <ConfirmDialog
-        open={pendingStepDelete !== null}
+        open={stepConfirm.isOpen}
         title={pendingStep ? `Delete step "${pendingStep.name}"?` : "Delete step?"}
         destructive
         confirmLabel="Delete step"
         message="The step and its prompt text will be permanently removed. This cannot be undone."
         onConfirm={() => {
-          if (pendingStepDelete) {
-            removeStep(chain.id, pendingStepDelete)
+          if (stepConfirm.pendingId) {
+            removeStep(chain.id, stepConfirm.pendingId)
             toast.success("Step deleted")
           }
-          setPendingStepDelete(null)
+          stepConfirm.clear()
         }}
-        onCancel={() => setPendingStepDelete(null)}
+        onCancel={() => stepConfirm.clear()}
       />
     </div>
   )
