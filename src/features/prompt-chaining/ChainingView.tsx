@@ -3,6 +3,7 @@ import { X, Trash2, Link2 } from "lucide-react"
 import { useChainingStore } from "./chaining-store"
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
 import { GalleryModal } from "@/components/modals/GalleryModal"
+import { usePendingConfirm } from "@/hooks/usePendingConfirm"
 import { ChainDetail } from "./ChainDetail"
 import { toast } from "sonner"
 
@@ -16,15 +17,15 @@ export function ChainingView() {
   const selectChain = useChainingStore((s) => s.selectChain)
   const initialize = useChainingStore((s) => s.initialize)
   const [newChainName, setNewChainName] = useState("")
-  const [pendingChainDelete, setPendingChainDelete] = useState<string | null>(null)
+  const chainConfirm = usePendingConfirm()
 
   useEffect(() => {
     initialize()
   }, [initialize])
 
   const selectedChain = chains.find((c) => c.id === selectedChainId)
-  const pendingChain = pendingChainDelete
-    ? chains.find((c) => c.id === pendingChainDelete) ?? null
+  const pendingChain = chainConfirm.pendingId
+    ? chains.find((c) => c.id === chainConfirm.pendingId) ?? null
     : null
 
   return (
@@ -87,7 +88,7 @@ export function ChainingView() {
                       </span>
                     </button>
                     <button
-                      onClick={() => setPendingChainDelete(chain.id)}
+                      onClick={() => chainConfirm.request(chain.id)}
                       className="mr-1 flex h-5 w-5 items-center justify-center rounded opacity-0 transition-opacity hover:bg-error/10 group-hover:opacity-100"
                       aria-label={`Delete ${chain.name}`}
                     >
@@ -108,7 +109,7 @@ export function ChainingView() {
           </div>
       </GalleryModal>
     <ConfirmDialog
-      open={pendingChainDelete !== null}
+      open={chainConfirm.isOpen}
       title={pendingChain ? `Delete chain "${pendingChain.name}"?` : "Delete chain?"}
       destructive
       confirmLabel="Delete chain"
@@ -118,13 +119,13 @@ export function ChainingView() {
           : "The chain and every step inside will be permanently removed. This cannot be undone."
       }
       onConfirm={() => {
-        if (pendingChainDelete) {
-          deleteChain(pendingChainDelete)
+        if (chainConfirm.pendingId) {
+          deleteChain(chainConfirm.pendingId)
           toast.success("Chain deleted")
         }
-        setPendingChainDelete(null)
+        chainConfirm.clear()
       }}
-      onCancel={() => setPendingChainDelete(null)}
+      onCancel={() => chainConfirm.clear()}
     />
     </>
   )
