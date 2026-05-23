@@ -7,6 +7,8 @@ import type { XmlTag } from "./xml-tag-data"
 import { toast } from "sonner"
 import { GalleryModal } from "@/components/modals/GalleryModal"
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
+import { usePendingConfirm } from "@/hooks/usePendingConfirm"
 
 function TagCard({
   tag,
@@ -19,16 +21,13 @@ function TagCard({
   onInsert: (tag: XmlTag) => void
   onDelete?: (id: string) => void
 }) {
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
 
   const handleCopy = () => {
     const snippet = `<${tag.name}>\n\n</${tag.name}>`
-    navigator.clipboard.writeText(snippet).then(() => {
-      setCopied(true)
-      toast.success(`<${tag.name}> copied`)
-      setTimeout(() => setCopied(false), 1500)
-    }).catch(() => {
-      toast.error("Failed to copy")
+    copy(snippet, {
+      successMessage: `<${tag.name}> copied`,
+      errorMessage: "Failed to copy",
     })
   }
 
@@ -83,19 +82,14 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
   const addCustomTag = useXmlTagsStore((s) => s.addCustomTag)
   const removeCustomTag = useXmlTagsStore((s) => s.removeCustomTag)
   const customTags = useXmlTagsStore((s) => s.customTags)
-  const initialize = useXmlTagsStore((s) => s.initialize)
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newTagName, setNewTagName] = useState("")
   const [newTagDescription, setNewTagDescription] = useState("")
   const [newTagCategory, setNewTagCategory] = useState("Basic Structure")
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const tagConfirm = usePendingConfirm()
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    initialize()
-  }, [initialize])
 
   useEffect(() => {
     if (isOpen) {
@@ -140,8 +134,8 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
   }
 
   const customTagIds = new Set(customTags.map((t) => t.id))
-  const pendingTag = pendingDeleteId
-    ? customTags.find((t) => t.id === pendingDeleteId) ?? null
+  const pendingTag = tagConfirm.pendingId
+    ? customTags.find((t) => t.id === tagConfirm.pendingId) ?? null
     : null
 
   return (
@@ -264,7 +258,7 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
                   tag={tag}
                   isCustom={customTagIds.has(tag.id)}
                   onInsert={handleInsert}
-                  onDelete={(id) => setPendingDeleteId(id)}
+                  onDelete={(id) => tagConfirm.request(id)}
                 />
               ))}
             </div>
@@ -276,7 +270,7 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
           </div>
     </GalleryModal>
     <ConfirmDialog
-      open={pendingDeleteId !== null}
+      open={tagConfirm.isOpen}
       title={
         pendingTag
           ? `Delete <${pendingTag.name}>?`
@@ -286,13 +280,13 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
       confirmLabel="Delete"
       message="This custom XML tag will be permanently removed from your library."
       onConfirm={() => {
-        if (pendingDeleteId) {
-          removeCustomTag(pendingDeleteId)
+        if (tagConfirm.pendingId) {
+          removeCustomTag(tagConfirm.pendingId)
           toast.success("Tag deleted")
         }
-        setPendingDeleteId(null)
+        tagConfirm.clear()
       }}
-      onCancel={() => setPendingDeleteId(null)}
+      onCancel={() => tagConfirm.clear()}
     />
     </>
   )
