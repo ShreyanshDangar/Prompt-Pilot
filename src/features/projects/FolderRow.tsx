@@ -1,6 +1,6 @@
-import { useState } from "react"
 import { Folder, Trash2, Pencil, Check } from "lucide-react"
 import { useProjectsStore } from "./projects-store"
+import { useInlineRename } from "@/hooks/useInlineRename"
 import { toast } from "sonner"
 import type { ProjectFolder } from "./projects-types"
 
@@ -16,39 +16,22 @@ export function FolderRow({
   onRequestDelete: () => void
 }) {
   const renameFolder = useProjectsStore((s) => s.renameFolder)
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(folder.name)
+  const rename = useInlineRename(folder.name, (name) => {
+    renameFolder(folder.id, name)
+    toast.success("Folder renamed")
+  })
 
-  const commit = () => {
-    const trimmed = draft.trim()
-    if (trimmed && trimmed !== folder.name) {
-      renameFolder(folder.id, trimmed)
-      toast.success("Folder renamed")
-    }
-    setEditing(false)
-  }
-
-  if (editing) {
+  if (rename.editing) {
     return (
       <div className="group flex items-center gap-1 px-3 py-1.5">
         <Folder className="h-3.5 w-3.5 shrink-0 text-text-muted" />
         <input
           type="text"
-          value={draft}
-          autoFocus
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit()
-            if (e.key === "Escape") {
-              setDraft(folder.name)
-              setEditing(false)
-            }
-          }}
+          {...rename.inputProps}
           className="min-w-0 flex-1 rounded border border-border bg-bg-secondary px-1 py-0.5 text-xs text-text-primary focus:border-accent focus:outline-none"
         />
         <button
-          onClick={commit}
+          onClick={rename.commit}
           className="flex h-4 w-4 items-center justify-center rounded text-text-muted hover:text-accent"
           aria-label="Save name"
         >
@@ -74,8 +57,7 @@ export function FolderRow({
       <button
         onClick={(e) => {
           e.stopPropagation()
-          setDraft(folder.name)
-          setEditing(true)
+          rename.start()
         }}
         className="mr-0.5 flex h-5 w-5 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:bg-bg-secondary hover:text-accent group-hover:opacity-100"
         aria-label={`Rename ${folder.name}`}
