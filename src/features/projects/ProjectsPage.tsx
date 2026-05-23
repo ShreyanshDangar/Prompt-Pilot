@@ -4,6 +4,7 @@ import { X, FolderPlus, FilePlus, FileText, Trash2, Star,
 import { useProjectsStore } from "./projects-store"
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
 import { GalleryModal } from "@/components/modals/GalleryModal"
+import { usePendingConfirm } from "@/hooks/usePendingConfirm"
 import { FolderRow } from "./FolderRow"
 import { ProjectDetail } from "./ProjectDetail"
 import { toast } from "sonner"
@@ -26,12 +27,8 @@ export function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [newFolderName, setNewFolderName] = useState("")
   const [showNewFolder, setShowNewFolder] = useState(false)
-  const [folderPendingDelete, setFolderPendingDelete] = useState<string | null>(
-    null,
-  )
-  const [projectPendingDelete, setProjectPendingDelete] = useState<string | null>(
-    null,
-  )
+  const folderConfirm = usePendingConfirm()
+  const projectConfirm = usePendingConfirm()
   const searchInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -45,14 +42,14 @@ export function ProjectsPage() {
     }
   }, [isOpen])
 
-  const pendingFolder = folderPendingDelete
-    ? folders.find((f) => f.id === folderPendingDelete) ?? null
+  const pendingFolder = folderConfirm.pendingId
+    ? folders.find((f) => f.id === folderConfirm.pendingId) ?? null
     : null
-  const pendingFolderProjectCount = folderPendingDelete
-    ? projects.filter((p) => p.folderId === folderPendingDelete).length
+  const pendingFolderProjectCount = folderConfirm.pendingId
+    ? projects.filter((p) => p.folderId === folderConfirm.pendingId).length
     : 0
-  const pendingProject = projectPendingDelete
-    ? projects.find((p) => p.id === projectPendingDelete) ?? null
+  const pendingProject = projectConfirm.pendingId
+    ? projects.find((p) => p.id === projectConfirm.pendingId) ?? null
     : null
 
   const lowerQuery = searchQuery.toLowerCase()
@@ -152,7 +149,7 @@ export function ProjectsPage() {
                     folder={folder}
                     isSelected={selectedFolderId === folder.id}
                     onSelect={() => selectFolder(folder.id)}
-                    onRequestDelete={() => setFolderPendingDelete(folder.id)}
+                    onRequestDelete={() => folderConfirm.request(folder.id)}
                   />
                 ))}
               </div>
@@ -223,7 +220,7 @@ export function ProjectsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          setProjectPendingDelete(project.id)
+                          projectConfirm.request(project.id)
                         }}
                         className="mr-1 flex w-6 shrink-0 items-center justify-center rounded opacity-0 transition-opacity hover:bg-error/10 group-hover:opacity-100"
                         aria-label={`Delete ${project.name}`}
@@ -250,7 +247,7 @@ export function ProjectsPage() {
           </div>
       </GalleryModal>
     <ConfirmDialog
-      open={folderPendingDelete !== null}
+      open={folderConfirm.isOpen}
       title={pendingFolder ? `Delete "${pendingFolder.name}"?` : "Delete folder?"}
       destructive
       confirmLabel="Delete folder"
@@ -262,28 +259,28 @@ export function ProjectsPage() {
           : "This folder is empty. Are you sure you want to delete it?"
       }
       onConfirm={() => {
-        if (folderPendingDelete) {
-          deleteFolder(folderPendingDelete)
+        if (folderConfirm.pendingId) {
+          deleteFolder(folderConfirm.pendingId)
           toast.success("Folder deleted")
         }
-        setFolderPendingDelete(null)
+        folderConfirm.clear()
       }}
-      onCancel={() => setFolderPendingDelete(null)}
+      onCancel={() => folderConfirm.clear()}
     />
     <ConfirmDialog
-      open={projectPendingDelete !== null}
+      open={projectConfirm.isOpen}
       title={pendingProject ? `Delete "${pendingProject.name}"?` : "Delete project?"}
       destructive
       confirmLabel="Delete project"
       message="The project, every prompt version, rating, and note will be permanently removed. This cannot be undone."
       onConfirm={() => {
-        if (projectPendingDelete) {
-          deleteProject(projectPendingDelete)
+        if (projectConfirm.pendingId) {
+          deleteProject(projectConfirm.pendingId)
           toast.success("Project deleted")
         }
-        setProjectPendingDelete(null)
+        projectConfirm.clear()
       }}
-      onCancel={() => setProjectPendingDelete(null)}
+      onCancel={() => projectConfirm.clear()}
     />
     </>
   )
