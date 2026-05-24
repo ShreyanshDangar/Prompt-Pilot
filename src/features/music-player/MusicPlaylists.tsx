@@ -9,6 +9,8 @@ import { NowPlayingBars } from "./NowPlayingBars";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { usePendingConfirm } from "@/hooks/usePendingConfirm";
+import { useInlineRename } from "@/hooks/useInlineRename";
 import { toast } from "sonner";
 
 function PlaylistName({
@@ -19,37 +21,16 @@ function PlaylistName({
   className?: string;
 }) {
   const renamePlaylist = useMusicStore((s) => s.renamePlaylist);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(playlist.name);
+  const rename = useInlineRename(playlist.name, (name) => {
+    renamePlaylist(playlist.id, name);
+  });
 
-  const startEdit = () => {
-    setDraft(playlist.name);
-    setEditing(true);
-  };
-
-  const commit = () => {
-    const trimmed = draft.trim();
-    if (trimmed && trimmed !== playlist.name) {
-      renamePlaylist(playlist.id, trimmed);
-    }
-    setEditing(false);
-  };
-
-  if (editing) {
+  if (rename.editing) {
     return (
       <div className="flex items-center gap-1">
         <input
           type="text"
-          value={draft}
-          autoFocus
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
-            if (e.key === "Escape") {
-              setEditing(false);
-            }
-          }}
+          {...rename.inputProps}
           onClick={(e) => e.stopPropagation()}
           className="min-w-0 flex-1 rounded border border-border bg-bg-secondary px-1 py-0.5 text-xs text-text-primary focus:border-accent focus:outline-none"
         />
@@ -57,7 +38,7 @@ function PlaylistName({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            commit();
+            rename.commit();
           }}
           className="flex h-4 w-4 items-center justify-center rounded text-text-muted hover:text-accent"
           aria-label="Save name"
@@ -75,7 +56,7 @@ function PlaylistName({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          startEdit();
+          rename.start();
         }}
         className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
         aria-label="Rename playlist"
@@ -274,9 +255,7 @@ export function PlaylistsTab() {
   );
   const [showPlaylistInput, setShowPlaylistInput] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [pendingPlaylistDelete, setPendingPlaylistDelete] = useState<
-    string | null
-  >(null);
+  const playlistConfirm = usePendingConfirm();
 
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
   const displayTracks = activePlaylist
@@ -407,7 +386,7 @@ export function PlaylistsTab() {
                     </span>
                   </button>
                   <button
-                    onClick={() => setPendingPlaylistDelete(pl.id)}
+                    onClick={() => playlistConfirm.request(pl.id)}
                     className="flex h-5 w-5 items-center justify-center rounded text-text-muted transition-colors hover:text-error"
                     aria-label="Delete playlist"
                     title="Delete playlist"
@@ -455,22 +434,22 @@ export function PlaylistsTab() {
         )}
       </div>
       <ConfirmDialog
-        open={pendingPlaylistDelete !== null}
+        open={playlistConfirm.isOpen}
         title={(() => {
-          const pl = playlists.find((p) => p.id === pendingPlaylistDelete);
+          const pl = playlists.find((p) => p.id === playlistConfirm.pendingId);
           return pl ? `Delete playlist "${pl.name}"?` : "Delete playlist?";
         })()}
         destructive
         confirmLabel="Delete"
         message="The playlist will be removed. The underlying tracks stay in your library."
         onConfirm={() => {
-          if (pendingPlaylistDelete) {
-            deletePlaylist(pendingPlaylistDelete);
+          if (playlistConfirm.pendingId) {
+            deletePlaylist(playlistConfirm.pendingId);
             toast.success("Playlist deleted");
           }
-          setPendingPlaylistDelete(null);
+          playlistConfirm.clear();
         }}
-        onCancel={() => setPendingPlaylistDelete(null)}
+        onCancel={() => playlistConfirm.clear()}
       />
     </>
   );
