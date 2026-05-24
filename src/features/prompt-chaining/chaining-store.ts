@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { getFromIDB, setToIDB } from "@/lib/storage"
+import { makeId } from "@/lib/id"
 import { STORAGE_KEYS } from "@/lib/constants"
 
 const CHAINS_KEY = STORAGE_KEYS.CHAINS
@@ -49,7 +50,7 @@ export const useChainingStore = create<ChainingStore>((set, get) => ({
 
   createChain: (name) => {
     const chain: PromptChain = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       name,
       steps: [],
       createdAt: Date.now(),
@@ -71,7 +72,7 @@ export const useChainingStore = create<ChainingStore>((set, get) => ({
 
   addStep: (chainId, name, promptText) => {
     const step: ChainStep = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       name,
       promptText,
       order: get().chains.find((c) => c.id === chainId)?.steps.length ?? 0,
