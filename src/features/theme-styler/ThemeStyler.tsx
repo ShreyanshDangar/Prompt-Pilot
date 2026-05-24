@@ -4,6 +4,7 @@ import { RotateCcw, ChevronDown } from "lucide-react";
 import { useGlobalStore } from "@/stores/global-store";
 import {
   DEFAULT_THEME_STYLES,
+  THEME_DISPLAY_NAMES,
   type ThemeStyleSettings,
 } from "@/lib/theme/theme-registry";
 import { getThemeFontOptions } from "@/lib/theme/fonts";
@@ -15,15 +16,6 @@ const THEME_COLOR_PRESETS: Record<string, string[]> = {
   zen: ["#2d3b28", "#4a8c5c", "#4a5e43", "#7a9070", "#c49a3c"],
   writer: ["#2c1810", "#8b5e3c", "#5c4030", "#5c8a50", "#c49a3c"],
   neural: ["#e0e8f8", "#4a90f0", "#8da0c4", "#4af0a0", "#f0c84a"],
-};
-
-const THEME_NAMES: Record<string, string> = {
-  default: "Default",
-  aurora: "Aurora",
-  cyber: "Neon Void",
-  zen: "Zen Forest",
-  writer: "Vintage Writer",
-  neural: "Neural",
 };
 
 function isStyleDefault(current: ThemeStyleSettings, theme: string): boolean {
@@ -97,7 +89,7 @@ export function ThemeStyler() {
   const availableFonts = getThemeFontOptions(theme);
   const colorPresets =
     THEME_COLOR_PRESETS[theme] ?? THEME_COLOR_PRESETS["default"];
-  const themeName = THEME_NAMES[theme] ?? theme;
+  const themeName = THEME_DISPLAY_NAMES[theme];
 
   const isDefault = useMemo(() => isStyleDefault(style, theme), [style, theme]);
   const update = (partial: Partial<ThemeStyleSettings>) => {
