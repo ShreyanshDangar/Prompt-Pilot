@@ -6,6 +6,7 @@ import { useMusicStore } from "./music-store";
 import { NowPlayingBars } from "./NowPlayingBars";
 import { SaveToPlaylistPopover } from "./MusicPlaylists";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
+import { usePendingConfirm } from "@/hooks/usePendingConfirm";
 import { toast } from "sonner";
 
 function DragHandle({
@@ -88,9 +89,7 @@ export function MusicTrackList() {
   const bulkTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [bulkPickerOpen, setBulkPickerOpen] = useState(false);
-  const [pendingTrackDelete, setPendingTrackDelete] = useState<string | null>(
-    null,
-  );
+  const trackConfirm = usePendingConfirm();
 
   const showBulkPicker = bulkPickerOpen && multiSelectMode;
   const localTracks = tracks.filter((t) => t.isLocal);
@@ -220,7 +219,7 @@ export function MusicTrackList() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPendingTrackDelete(track.id);
+                            trackConfirm.request(track.id);
                           }}
                           className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
                           aria-label={`Delete ${track.title} from library`}
@@ -329,22 +328,22 @@ export function MusicTrackList() {
         onChange={handleFileUpload}
       />
       <ConfirmDialog
-        open={pendingTrackDelete !== null}
+        open={trackConfirm.isOpen}
         title={(() => {
-          const t = tracks.find((t) => t.id === pendingTrackDelete);
+          const t = tracks.find((t) => t.id === trackConfirm.pendingId);
           return t ? `Delete "${t.title}" from library?` : "Delete track?";
         })()}
         destructive
         confirmLabel="Delete"
         message="This will remove the audio file from your library and from any playlists it lives in. This cannot be undone."
         onConfirm={() => {
-          if (pendingTrackDelete) {
-            void removeTrack(pendingTrackDelete);
+          if (trackConfirm.pendingId) {
+            void removeTrack(trackConfirm.pendingId);
             toast.success("Track deleted");
           }
-          setPendingTrackDelete(null);
+          trackConfirm.clear();
         }}
-        onCancel={() => setPendingTrackDelete(null)}
+        onCancel={() => trackConfirm.clear()}
       />
     </>
   );
