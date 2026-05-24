@@ -6,8 +6,10 @@ import { useEditorStore } from "@/features/editor/editor-store"
 import { useSlashStore } from "@/features/slash-commands/slash-store"
 import { useProjectsStore } from "@/features/projects/projects-store"
 import { CenteredModal } from "@/components/modals/CenteredModal"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { toast } from "sonner"
 import { BUILT_IN_COMMANDS } from "@/features/slash-commands/built-in-commands"
+import { runBuiltInCommand } from "@/features/slash-commands/run-built-in-command"
 import type { SlashCommand } from "@/features/slash-commands/slash-types"
 
 export function CommandPalette() {
@@ -20,6 +22,7 @@ export function CommandPalette() {
   const incrementUsage = useSlashStore((s) => s.incrementUsage)
   const openCreateModal = useSlashStore((s) => s.openCreateModal)
   const openProjects = useProjectsStore((s) => s.setOpen)
+  const { copy } = useCopyToClipboard()
 
   const commands = useMemo(
     () => [...BUILT_IN_COMMANDS, ...userCommands],
@@ -27,25 +30,16 @@ export function CommandPalette() {
   )
 
   const runSlashCommand = (cmd: SlashCommand) => {
-    if (cmd.name === "/create") {
-      openCreateModal()
-      setOpen(false)
-      return
-    }
-    if (cmd.name === "/templates") {
-      setActivePanel("templates")
-      setOpen(false)
-      return
-    }
-    if (cmd.name === "/projects") {
-      openProjects(true)
-      setOpen(false)
-      return
-    }
-    if (cmd.name === "/help") {
-      toast.info(
-        "Type / in the editor to insert a slash command, or open the gallery to manage them.",
-      )
+    const handled = runBuiltInCommand(cmd.name, {
+      openCreateModal,
+      openTemplates: () => setActivePanel("templates"),
+      openProjects: () => openProjects(true),
+      showHelp: () =>
+        toast.info(
+          "Type / in the editor to insert a slash command, or open the gallery to manage them.",
+        ),
+    })
+    if (handled) {
       setOpen(false)
       return
     }
@@ -77,8 +71,7 @@ export function CommandPalette() {
   const handleCopy = async () => {
     const text = getText()
     if (text.trim()) {
-      await navigator.clipboard.writeText(text)
-      toast.success("Prompt copied to clipboard")
+      await copy(text, { successMessage: "Prompt copied to clipboard" })
     }
     setOpen(false)
   }
