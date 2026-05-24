@@ -11,7 +11,10 @@ import {
 } from "./audio-db"
 import type { PersistedMusicState } from "./music-types"
 
-// The store also writes current state back to this key on init for
+// Pre-v2 localStorage keys, kept verbatim for one-time migration only (the live
+// store persists to IndexedDB; see audio-db.ts). Not part of the active
+// `STORAGE_KEYS`/`KEYBOARD_STORAGE_KEYS` registry in lib/constants.ts.
+// The store also writes current state back to LEGACY_MUSIC_STATE_KEY on init for
 // backward compatibility, so it is exported.
 export const LEGACY_MUSIC_STATE_KEY = "prompt-pilot-music"
 const LEGACY_LOCAL_TRACKS_KEY = "prompt-pilot-local-tracks"
@@ -53,7 +56,9 @@ export async function migrateLegacyStorageOnce(): Promise<void> {
       })
       if (tracks.length > 0) await putLocalTracks(tracks)
     }
-  } catch { }
+  } catch {
+    // best-effort: legacy migration is non-critical
+  }
 
   try {
     const legacyPlaylistsRaw = getFromLocalStorage<unknown>(LEGACY_PLAYLISTS_KEY)
@@ -77,7 +82,9 @@ export async function migrateLegacyStorageOnce(): Promise<void> {
         })
       }
     }
-  } catch { }
+  } catch {
+    // best-effort: legacy migration is non-critical
+  }
 
   try {
     const legacyState = getFromLocalStorage<PersistedMusicState>(
@@ -97,9 +104,13 @@ export async function migrateLegacyStorageOnce(): Promise<void> {
       if (Array.isArray(legacyState.trackOrder))
         await putSetting(SETTING_TRACK_ORDER, legacyState.trackOrder)
     }
-  } catch { }
+  } catch {
+    // best-effort: legacy migration is non-critical
+  }
 
   try {
     window.localStorage.setItem(MIGRATION_FLAG_KEY, "1")
-  } catch { }
+  } catch {
+    // best-effort: legacy migration is non-critical
+  }
 }
