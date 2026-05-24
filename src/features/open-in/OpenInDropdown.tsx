@@ -4,11 +4,13 @@ import { ExternalLink, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { useEditorStore } from "@/features/editor/editor-store"
 import { useClickOutside } from "@/hooks/useClickOutside"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { PROVIDERS, MAX_URL_LENGTH, type Provider } from "./providers"
 
 export function OpenInDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const getText = useEditorStore((s) => s.getText)
+  const { copy } = useCopyToClipboard()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen)
@@ -24,14 +26,10 @@ export function OpenInDropdown() {
       }
 
       if (!provider.supportsPrefill) {
-        try {
-          await navigator.clipboard.writeText(text)
-          toast.success(
-            `${provider.name} doesn't support prompt URLs. Copied to clipboard.`,
-          )
-        } catch {
-          toast.error("Failed to copy prompt to clipboard")
-        }
+        await copy(text, {
+          successMessage: `${provider.name} doesn't support prompt URLs. Copied to clipboard.`,
+          errorMessage: "Failed to copy prompt to clipboard",
+        })
         window.open(provider.blankUrl, "_blank", "noopener,noreferrer")
         setIsOpen(false)
         return
@@ -39,14 +37,10 @@ export function OpenInDropdown() {
 
       const url = provider.buildUrl(text)
       if (url.length > MAX_URL_LENGTH) {
-        try {
-          await navigator.clipboard.writeText(text)
-          toast.success(
-            `Prompt too long for URL. Copied to clipboard — paste into ${provider.name}.`,
-          )
-        } catch {
-          toast.error("Failed to copy prompt to clipboard")
-        }
+        await copy(text, {
+          successMessage: `Prompt too long for URL. Copied to clipboard — paste into ${provider.name}.`,
+          errorMessage: "Failed to copy prompt to clipboard",
+        })
         window.open(provider.blankUrl, "_blank", "noopener,noreferrer")
         setIsOpen(false)
         return
@@ -56,7 +50,7 @@ export function OpenInDropdown() {
       toast.success(`Opening ${provider.name}...`)
       setIsOpen(false)
     },
-    [getText],
+    [getText, copy],
   )
 
   return (
