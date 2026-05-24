@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { setToLocalStorage } from "@/lib/storage"
+import { makeId } from "@/lib/id"
 import {
   deleteAudioFile,
   deleteLocalTrack,
@@ -132,13 +133,6 @@ function persistPlaylist(playlist: Playlist): Promise<void> {
     updatedAt: playlist.updatedAt,
   }
   return putPlaylist(stored).catch(() => {})
-}
-
-function makeId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 function titleFromFileName(name: string): string {
@@ -474,11 +468,15 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     if (target?.isLocal) {
       try {
         await deleteLocalTrack(target.id)
-      } catch { }
+      } catch {
+        // best-effort: the track may already be removed
+      }
       if (target.fileId) {
         try {
           await deleteAudioFile(target.fileId)
-        } catch { }
+        } catch {
+          // best-effort: the audio blob may already be removed
+        }
       }
     }
   },
@@ -505,7 +503,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     initPromise = (async () => {
       try {
         await migrateLegacyStorageOnce()
-      } catch { }
+      } catch {
+        // best-effort: legacy migration is non-critical
+      }
 
       let tracks: Track[] = [...BUNDLED_TRACKS]
 
@@ -528,10 +528,14 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
               mimeType: meta.mimeType ?? audio.type,
               sizeBytes: meta.sizeBytes ?? audio.size,
             })
-          } catch { }
+          } catch {
+            // best-effort: skip tracks that fail to rehydrate
+          }
         }
         tracks = [...tracks, ...rehydrated]
-      } catch { }
+      } catch {
+        // best-effort: fall back to the bundled tracks
+      }
 
       let savedTrackOrder: string[] | undefined
       let savedVolume: number | undefined
@@ -544,7 +548,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
         savedRepeat = await getSetting<"off" | "single" | "all">(
           SETTING_REPEAT,
         )
-      } catch { }
+      } catch {
+        // best-effort: fall back to default playback settings
+      }
 
       if (Array.isArray(savedTrackOrder)) {
         const ordered: Track[] = []
@@ -592,7 +598,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
           repeat: savedRepeat ?? "off",
           trackOrder: tracks.map((t) => t.id),
         } satisfies PersistedMusicState)
-      } catch { }
+      } catch {
+        // best-effort: the legacy mirror is non-critical
+      }
     })()
     try {
       await initPromise
