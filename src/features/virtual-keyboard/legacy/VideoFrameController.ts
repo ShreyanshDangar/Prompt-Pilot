@@ -212,5 +212,3 @@ const controllers: Record<KeySizeCategory, VideoFrameController> = {
 export function getKeyController(size: KeySizeCategory): VideoFrameController {
   return controllers[size]
 }
-
-export const sharedVideoController = controllers.small
