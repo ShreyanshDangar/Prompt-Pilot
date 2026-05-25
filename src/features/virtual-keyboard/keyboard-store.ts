@@ -1,8 +1,9 @@
 import { create } from "zustand"
-import { getFromLocalStorage, setToLocalStorage } from "@/lib/storage"
+import { getFromLocalStorage, safeSetLocalStorage } from "@/lib/storage"
+import { KEYBOARD_STORAGE_KEYS } from "@/lib/constants"
 
-const KB_V1_KEY = "promptPilot.keyboardSettings.v1"
-const KB_LEGACY_KEY = "prompt-pilot-keyboard"
+const KB_V1_KEY = KEYBOARD_STORAGE_KEYS.V1
+const KB_LEGACY_KEY = KEYBOARD_STORAGE_KEYS.LEGACY
 
 export type ActiveKeyboard = "mac" | "classic"
 export type PreviewMode = "word" | "letter"
@@ -47,7 +48,6 @@ interface KeyboardStore {
   fontPresetByTheme: Record<string, string>
   toggleVisible: () => void
   setVisible: (v: boolean) => void
-  setSize: (s: number) => void
   setActiveKeyboard: (k: ActiveKeyboard) => void
   setSoundEnabled: (v: boolean) => void
   setPreviewEnabled: (v: boolean) => void
@@ -60,9 +60,8 @@ interface KeyboardStore {
 }
 
 function persist(state: PersistedState) {
-  try {
-    setToLocalStorage(KB_V1_KEY, state)
-  } catch { }
+  // best-effort: persistence is non-critical
+  safeSetLocalStorage(KB_V1_KEY, state)
 }
 
 function readPersisted(): PersistedState {
@@ -95,7 +94,9 @@ function readPersisted(): PersistedState {
       persist(migrated)
       return migrated
     }
-  } catch { }
+  } catch {
+    // best-effort: fall back to defaults if persisted state can't be read
+  }
   return { ...DEFAULTS }
 }
 
@@ -134,10 +135,6 @@ export const useKeyboardStore = create<KeyboardStore>((set, get) => ({
   setVisible: (v) => {
     set({ isVisible: v })
     persist(snapshot(get, { isVisible: v }))
-  },
-
-  setSize: (size) => {
-    set({ size })
   },
 
   setActiveKeyboard: (k) => {
