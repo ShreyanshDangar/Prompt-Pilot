@@ -7,9 +7,9 @@ import { Editor } from "@/features/editor/Editor";
 import { TokenCalculator } from "@/features/token-calculator/TokenCalculator";
 import { ThemeStyler } from "@/features/theme-styler/ThemeStyler";
 import { SettingsPanel } from "@/features/settings/SettingsPanel";
-import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { XmlTagGallery } from "@/features/xml-tags/XmlTagGallery";
 import { useGlobalStore } from "@/stores/global-store";
+import { useProjectsStore } from "@/features/projects/projects-store";
 import { useMusicStore } from "@/features/music-player/music-store";
 import { useXmlTagsStore } from "@/features/xml-tags/xml-tags-store";
 import { useEditorStore } from "@/features/editor/editor-store";
@@ -42,6 +42,12 @@ const MusicPlayer = lazy(() =>
   })),
 );
 
+const ProjectsPage = lazy(() =>
+  import("@/features/projects/ProjectsPage").then((m) => ({
+    default: m.ProjectsPage,
+  })),
+);
+
 const VirtualKeyboard = lazy(() =>
   import("@/features/virtual-keyboard/VirtualKeyboard").then((m) => ({
     default: m.VirtualKeyboard,
@@ -63,6 +69,7 @@ const ChainingView = lazy(() =>
 export function AppShell() {
   const rightPanelOpen = useGlobalStore((s) => s.rightPanelOpen);
   const activePanel = useGlobalStore((s) => s.activePanel);
+  const projectsOpen = useProjectsStore((s) => s.isOpen);
   const musicActivated = useMusicStore((s) => s.isActivated);
   const themeBgClass = useGlobalStore((s) => s.getThemeBgClass());
   const websiteTheme = useGlobalStore((s) => s.settings.websiteTheme);
@@ -80,6 +87,14 @@ export function AppShell() {
       : 288,
   );
   const [rightWillChange, setRightWillChange] = useState<string>("auto");
+  // Mount the (lazy) Projects page only once it has first been opened, then keep
+  // it mounted so GalleryModal's open/close animation plays exactly as before.
+  // Adjusting state during render (the supported React pattern) latches it on the
+  // first open without a set-state-in-effect.
+  const [projectsMounted, setProjectsMounted] = useState(false);
+  if (projectsOpen && !projectsMounted) {
+    setProjectsMounted(true);
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -248,7 +263,11 @@ export function AppShell() {
         </main>
         <SettingsPanel />
       </div>
-      <ProjectsPage />
+      {projectsMounted && (
+        <Suspense fallback={null}>
+          <ProjectsPage />
+        </Suspense>
+      )}
       <Suspense fallback={null}>
         <TemplateGallery
           isOpen={templatesOpen}
