@@ -1,9 +1,8 @@
 import { useMemo, useRef } from "react"
 import { motion } from "framer-motion"
-import { IconBrightnessDown, IconBrightnessUp, IconCaretDownFilled, IconCaretLeftFilled, IconCaretRightFilled,
-  IconCaretUpFilled, IconChevronUp, IconCommand, IconMicrophone, IconMoon, IconPlayerSkipForward, IconPlayerTrackNext,
-  IconPlayerTrackPrev, IconSearch, IconTable, IconVolume, IconVolume2, IconVolume3, IconWorld, IconBrandWindows
-} from "@tabler/icons-react"
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Command, FastForward, Globe,
+  Mic, Moon, Search, SkipBack, SkipForward, Sun, SunDim, Table, Volume1, Volume2, VolumeX
+} from "lucide-react"
 import { cn } from "@/lib/cn"
 import { Key, ModifierKey, OptionKey } from "./MacKeyboardKeys"
 import { KeyboardProvider } from "./mac-keyboard-provider"
@@ -12,6 +11,19 @@ import { getKeyDisplayLabel } from "./mac-keyboard-sounds"
 import { useKeyboardStore } from "../keyboard-store"
 import { getColorPreset, getFontPreset } from "../keyboard-presets"
 import { useGlobalStore } from "@/stores/global-store"
+
+// lucide-react has no Windows brand glyph; this 4-pane mark mirrors the
+// previous Tabler brand-windows icon (kept local like OptionKey in MacKeyboardKeys).
+function WindowsLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="8" height="8" rx="0.5" />
+      <rect x="13" y="3" width="8" height="8" rx="0.5" />
+      <rect x="3" y="13" width="8" height="8" rx="0.5" />
+      <rect x="13" y="13" width="8" height="8" rx="0.5" />
+    </svg>
+  )
+}
 
 function KeystrokePreview() {
   const { lastPressedKey, lastPressedKeyValue } = useKeyboardSound()
@@ -76,51 +88,51 @@ function Keypad() {
           <span>esc</span>
         </Key>
         <Key keyCode="F1">
-          <IconBrightnessDown className="h-1.5 w-1.5" />
+          <SunDim className="h-1.5 w-1.5" />
           <span className="mt-1">F1</span>
         </Key>
         <Key keyCode="F2">
-          <IconBrightnessUp className="h-1.5 w-1.5" />
+          <Sun className="h-1.5 w-1.5" />
           <span className="mt-1">F2</span>
         </Key>
         <Key keyCode="F3">
-          <IconTable className="h-1.5 w-1.5" />
+          <Table className="h-1.5 w-1.5" />
           <span className="mt-1">F3</span>
         </Key>
         <Key keyCode="F4">
-          <IconSearch className="h-1.5 w-1.5" />
+          <Search className="h-1.5 w-1.5" />
           <span className="mt-1">F4</span>
         </Key>
         <Key keyCode="F5">
-          <IconMicrophone className="h-1.5 w-1.5" />
+          <Mic className="h-1.5 w-1.5" />
           <span className="mt-1">F5</span>
         </Key>
         <Key keyCode="F6">
-          <IconMoon className="h-1.5 w-1.5" />
+          <Moon className="h-1.5 w-1.5" />
           <span className="mt-1">F6</span>
         </Key>
         <Key keyCode="F7">
-          <IconPlayerTrackPrev className="h-1.5 w-1.5" />
+          <SkipBack className="h-1.5 w-1.5" />
           <span className="mt-1">F7</span>
         </Key>
         <Key keyCode="F8">
-          <IconPlayerSkipForward className="h-1.5 w-1.5" />
+          <FastForward className="h-1.5 w-1.5" />
           <span className="mt-1">F8</span>
         </Key>
         <Key keyCode="F9">
-          <IconPlayerTrackNext className="h-1.5 w-1.5" />
+          <SkipForward className="h-1.5 w-1.5" />
           <span className="mt-1">F9</span>
         </Key>
         <Key keyCode="F10">
-          <IconVolume3 className="h-1.5 w-1.5" />
+          <VolumeX className="h-1.5 w-1.5" />
           <span className="mt-1">F10</span>
         </Key>
         <Key keyCode="F11">
-          <IconVolume2 className="h-1.5 w-1.5" />
+          <Volume1 className="h-1.5 w-1.5" />
           <span className="mt-1">F11</span>
         </Key>
         <Key keyCode="F12">
-          <IconVolume className="h-1.5 w-1.5" />
+          <Volume2 className="h-1.5 w-1.5" />
           <span className="mt-1">F12</span>
         </Key>
         <Key containerClassName="rounded-tr-xl" className="rounded-tr-lg">
@@ -297,10 +309,10 @@ function MacBottomRow() {
         className="rounded-bl-lg"
       >
         <span>fn</span>
-        <IconWorld className="h-1.5 w-1.5" />
+        <Globe className="h-1.5 w-1.5" />
       </ModifierKey>
       <ModifierKey keyCode="ControlLeft">
-        <IconChevronUp className="h-1.5 w-1.5" />
+        <ChevronUp className="h-1.5 w-1.5" />
         <span>control</span>
       </ModifierKey>
       <ModifierKey keyCode="AltLeft">
@@ -308,12 +320,12 @@ function MacBottomRow() {
         <span>option</span>
       </ModifierKey>
       <ModifierKey keyCode="MetaLeft" className="w-8">
-        <IconCommand className="h-1.5 w-1.5" />
+        <Command className="h-1.5 w-1.5" />
         <span>command</span>
       </ModifierKey>
       <Key keyCode="Space" className="w-[8.2rem]" />
       <ModifierKey keyCode="MetaRight" className="w-8">
-        <IconCommand className="h-1.5 w-1.5" />
+        <Command className="h-1.5 w-1.5" />
         <span>command</span>
       </ModifierKey>
       <ModifierKey keyCode="AltRight">
@@ -335,7 +347,7 @@ function WindowsBottomRow() {
         <span>Ctrl</span>
       </ModifierKey>
       <ModifierKey keyCode="MetaLeft">
-        <IconBrandWindows className="h-1.5 w-1.5" />
+        <WindowsLogo className="h-1.5 w-1.5" />
         <span>Win</span>
       </ModifierKey>
       <ModifierKey keyCode="AltLeft">
@@ -346,7 +358,7 @@ function WindowsBottomRow() {
         <span>Alt</span>
       </ModifierKey>
       <ModifierKey keyCode="MetaRight">
-        <IconBrandWindows className="h-1.5 w-1.5" />
+        <WindowsLogo className="h-1.5 w-1.5" />
         <span>Win</span>
       </ModifierKey>
       <ModifierKey keyCode="ControlRight">
@@ -365,14 +377,14 @@ function BottomRow() {
 
       <div className="flex h-6 w-[4.9rem] items-center justify-end rounded-sm p-[0.5px]">
         <Key keyCode="ArrowLeft" className="h-6 w-6">
-          <IconCaretLeftFilled className="h-1.5 w-1.5" />
+          <ChevronLeft className="h-1.5 w-1.5" />
         </Key>
         <div className="flex flex-col">
           <Key keyCode="ArrowUp" className="h-3 w-6">
-            <IconCaretUpFilled className="h-1.5 w-1.5" />
+            <ChevronUp className="h-1.5 w-1.5" />
           </Key>
           <Key keyCode="ArrowDown" className="h-3 w-6">
-            <IconCaretDownFilled className="h-1.5 w-1.5" />
+            <ChevronDown className="h-1.5 w-1.5" />
           </Key>
         </div>
         <Key
@@ -380,7 +392,7 @@ function BottomRow() {
           containerClassName="rounded-br-xl"
           className="h-6 w-6 rounded-br-lg"
         >
-          <IconCaretRightFilled className="h-1.5 w-1.5" />
+          <ChevronRight className="h-1.5 w-1.5" />
         </Key>
       </div>
     </Row>
