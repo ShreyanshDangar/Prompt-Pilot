@@ -6,6 +6,9 @@ import { useKeyboardStore } from "../keyboard-store"
 import { detectPhysicalPlatform } from "@/lib/platform"
 import { useKeyState } from "../useKeyState"
 
+// sessionStorage (per-tab, not persisted) one-shot flags for the platform-suggest
+// toast — intentionally separate from the localStorage `STORAGE_KEYS` /
+// `KEYBOARD_STORAGE_KEYS` registry in lib/constants.ts.
 const CROSS_PLATFORM_TOAST_KEYS = {
   suggestMac: "promptPilot.kbToast.suggestMac.v1",
   suggestWindows: "promptPilot.kbToast.suggestWindows.v1",
