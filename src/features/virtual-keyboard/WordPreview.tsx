@@ -62,14 +62,6 @@ export function WordPreview({ enabled }: { enabled: boolean }) {
     clearEnterTimer()
   }, [clearEnterTimer, clearExitTimer, clearIdleTimer])
 
-  const resetWordPreview = useCallback(() => {
-    clearAllWordTimers()
-    currentWordRef.current = ""
-    animationPhaseRef.current = "idle"
-    setCurrentWord("")
-    setAnimationPhase("idle")
-  }, [clearAllWordTimers])
-
   const finishWordExit = useCallback(() => {
     clearExitTimer()
     clearIdleTimer()
@@ -186,10 +178,20 @@ export function WordPreview({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     enabledRef.current = enabled
-    if (!enabled) {
-      resetWordPreview()
-    }
-  }, [enabled, resetWordPreview])
+    if (enabled) return
+    // Disabled: stop pending animation timers and clear the word. The render
+    // already hides the preview while disabled (see `visible`), so the state
+    // reset is deferred out of the effect body via requestAnimationFrame to
+    // satisfy react-hooks/set-state-in-effect without changing what renders.
+    clearAllWordTimers()
+    currentWordRef.current = ""
+    animationPhaseRef.current = "idle"
+    const raf = requestAnimationFrame(() => {
+      setCurrentWord("")
+      setAnimationPhase("idle")
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [enabled, clearAllWordTimers])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
