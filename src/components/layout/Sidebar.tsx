@@ -12,15 +12,15 @@ import { SlashCommandGallery } from "@/features/slash-commands/SlashCommandGalle
 import { useXmlTagsStore } from "@/features/xml-tags/xml-tags-store";
 import { ThemeVideo } from "@/components/ThemeVideo";
 import { SIDEBAR_WIDTH } from "@/lib/panel-breakpoints";
-import type { WebsiteTheme } from "@/lib/theme/theme-registry";
+import { THEME_DISPLAY_NAMES, type WebsiteTheme } from "@/lib/theme/theme-registry";
 
 const WEBSITE_THEMES: { id: WebsiteTheme; label: string; icon: typeof Monitor }[] = [
-  { id: "default", label: "Modern", icon: Monitor },
-  { id: "aurora", label: "Aurora Borealis", icon: Sparkles },
-  { id: "cyber", label: "Neon Void", icon: Zap },
-  { id: "zen", label: "Zen Forest", icon: Leaf },
-  { id: "writer", label: "Vintage Writer", icon: PenLine },
-  { id: "neural", label: "Neural Workspace", icon: BrainCircuit },
+  { id: "default", label: THEME_DISPLAY_NAMES.default, icon: Monitor },
+  { id: "aurora", label: THEME_DISPLAY_NAMES.aurora, icon: Sparkles },
+  { id: "cyber", label: THEME_DISPLAY_NAMES.cyber, icon: Zap },
+  { id: "zen", label: THEME_DISPLAY_NAMES.zen, icon: Leaf },
+  { id: "writer", label: THEME_DISPLAY_NAMES.writer, icon: PenLine },
+  { id: "neural", label: THEME_DISPLAY_NAMES.neural, icon: BrainCircuit },
 ];
 
 interface SidebarNavItem {
