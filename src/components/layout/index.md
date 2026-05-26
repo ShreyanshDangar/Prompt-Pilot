@@ -4,7 +4,7 @@ The application shell and chrome: the composition root plus the navbar, sidebar,
 
 | File | Exports | Description |
 | --- | --- | --- |
-| `AppShell.tsx` | `AppShell` | Composition root: lays out navbar + sidebar + editor + right panel, mounts feature modals, and lazy-loads the music player. |
+| `AppShell.tsx` | `AppShell` | Composition root: lays out navbar + sidebar + editor + right panel, mounts feature modals, and lazy-loads the music player and the projects page (the latter latched to mount once first opened). |
 | `Navbar.tsx` | `Navbar` | Top bar: app title, global actions, and music-player launch. |
 | `Sidebar.tsx` | `Sidebar` | Left panel: launchers for projects, chains, slash commands, xml tags, and keyboard. |
 | `RightPanelToggle.tsx` | `RightPanelToggle`, `RightPanelSection` (type) | Toggle between the token calculator and theme styler in the right panel. |
