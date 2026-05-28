@@ -1,4 +1,4 @@
-import { get, set, del } from "idb-keyval"
+import { get, set } from "idb-keyval"
 
 export async function getFromIDB<T>(key: string): Promise<T | undefined> {
   return get<T>(key)
@@ -6,10 +6,6 @@ export async function getFromIDB<T>(key: string): Promise<T | undefined> {
 
 export async function setToIDB<T>(key: string, value: T): Promise<void> {
   return set(key, value)
-}
-
-export async function deleteFromIDB(key: string): Promise<void> {
-  return del(key)
 }
 
 export function getFromLocalStorage<T>(key: string): T | null {
