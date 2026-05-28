@@ -88,6 +88,17 @@ export function getModelById(id: string): ModelInfo | undefined {
   return MODELS.find((m) => m.id === id)
 }
 
+export function formatContextTokens(n: number): string {
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000
+    return `${Number.isInteger(m) ? m : m.toFixed(1).replace(/\.0$/, "")}M`
+  }
+  if (n >= 1_000) {
+    return `${Math.round(n / 1_000)}K`
+  }
+  return String(n)
+}
+
 export function estimateTokens(text: string, charsPerToken: number): number {
   if (!text) return 0
   return Math.ceil(text.length / charsPerToken)
