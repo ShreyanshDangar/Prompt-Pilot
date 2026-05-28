@@ -158,7 +158,7 @@ export const SOUND_DEFINES_UP: Record<string, [number, number]> = {
   ArrowRight: [50783 + 115, 100],
 }
 
-export const KEY_DISPLAY_LABELS: Record<string, string> = {
+const KEY_DISPLAY_LABELS: Record<string, string> = {
   Escape: "esc",
   Backspace: "delete",
   Tab: "tab",
