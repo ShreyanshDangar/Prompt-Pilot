@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
 
-export interface KeyboardContextValue {
+interface KeyboardContextValue {
   playSoundDown: (keyCode: string) => void
   playSoundUp: (keyCode: string) => void
   pressedKeys: Set<string>
