@@ -1,7 +1,7 @@
 import type { Transition, Variants } from "framer-motion"
 
-export const ENTER_EASE = [0.16, 1, 0.3, 1] as const
-export const EXIT_EASE = [0.4, 0, 1, 1] as const
+const ENTER_EASE = [0.16, 1, 0.3, 1] as const
+const EXIT_EASE = [0.4, 0, 1, 1] as const
 
 /**
  * Panel enter/exit variants shared by the keyboard popovers. The customize
