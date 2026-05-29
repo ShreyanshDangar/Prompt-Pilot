@@ -14,7 +14,7 @@ type VideoWithFrameCallback = HTMLVideoElement & {
 
 export type KeySizeCategory = "small" | "medium" | "space"
 
-export class VideoFrameController {
+class VideoFrameController {
   private video: HTMLVideoElement
   private subscribers = new Map<CanvasRenderingContext2D, SubscriberEntry>()
   private animationFrameId: number | null = null
