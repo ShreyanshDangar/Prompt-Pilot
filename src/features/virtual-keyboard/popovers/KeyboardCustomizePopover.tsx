@@ -1,12 +1,9 @@
-import { useRef, useState } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { useKeyboardStore } from "../keyboard-store"
 import { getColorPresets, getFontPresets } from "../keyboard-presets"
 import { useGlobalStore } from "@/stores/global-store"
-import { useEscapeKey } from "@/hooks/useEscapeKey"
-import { useClickOutside } from "@/hooks/useClickOutside"
-import { getPanelVariants, getChildVariants } from "./keyboard-popover-motion"
+import { usePopover } from "./usePopover"
 
 function PaletteBrushIcon({ className }: { className?: string }) {
   return (
@@ -44,23 +41,8 @@ export function KeyboardCustomizePopover() {
   const colorPresets = getColorPresets(websiteTheme)
   const fontPresets = getFontPresets(websiteTheme)
 
-  const [open, setOpen] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const reduceMotion = useReducedMotion()
-
-  useEscapeKey(
-    (e) => {
-      e.stopPropagation()
-      setOpen(false)
-    },
-    open,
-    document,
-  )
-  useClickOutside([panelRef, triggerRef], () => setOpen(false), open)
-
-  const panelVariants = getPanelVariants(reduceMotion, "left")
-  const childVariants = getChildVariants(reduceMotion)
+  const { open, setOpen, panelRef, triggerRef, reduceMotion, panelVariants, childVariants } =
+    usePopover("left")
 
   return (
     <div className="absolute left-2 top-2 z-20">
