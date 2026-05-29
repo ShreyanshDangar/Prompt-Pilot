@@ -40,9 +40,11 @@ interface EditorStore {
   updateTabScroll: (id: string, scrollPosition: number) => void
   addTab: () => void
   closeTab: (id: string) => void
+  reorderTab: (fromIndex: number, toIndex: number) => void
   getActiveTab: () => EditorTab | undefined
   updateTabTheme: (id: string, theme: string) => void
   getText: () => string
+  markAllTabsSaved: () => void
   skipDirtyCloseConfirm: boolean
   setSkipDirtyCloseConfirm: (v: boolean) => void
 }
@@ -107,6 +109,23 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ tabs: renumbered, activeTabId: newActiveId })
   },
 
+  reorderTab: (fromIndex, toIndex) =>
+    set((s) => {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= s.tabs.length ||
+        toIndex >= s.tabs.length
+      ) {
+        return {}
+      }
+      const tabs = [...s.tabs]
+      const [moved] = tabs.splice(fromIndex, 1)
+      tabs.splice(toIndex, 0, moved)
+      return { tabs: renumberUnrenamedTabs(tabs) }
+    }),
+
   updateTabTheme: (id, theme) =>
     set((s) => ({
       tabs: s.tabs.map((t) => (t.id === id ? { ...t, theme } : t)),
@@ -118,4 +137,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   getText: () => get().editor?.getText() ?? "",
+
+  markAllTabsSaved: () =>
+    set((s) =>
+      s.tabs.some((t) => t.isDirty)
+        ? { tabs: s.tabs.map((t) => (t.isDirty ? { ...t, isDirty: false } : t)) }
+        : {},
+    ),
 }))
