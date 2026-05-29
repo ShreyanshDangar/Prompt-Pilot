@@ -28,7 +28,7 @@ const DEFAULT_FONT: KeyboardFontPreset = {
   fontFamily: resolveFontFamily("Inter"),
 };
 
-export const KEYBOARD_COLOR_PRESETS: Record<string, KeyboardColorPreset[]> = {
+const KEYBOARD_COLOR_PRESETS: Record<string, KeyboardColorPreset[]> = {
   default: [
     DEFAULT_COLOR,
     {
@@ -175,7 +175,7 @@ export const KEYBOARD_COLOR_PRESETS: Record<string, KeyboardColorPreset[]> = {
   ],
 };
 
-export const KEYBOARD_FONT_PRESETS: Record<string, KeyboardFontPreset[]> = {
+const KEYBOARD_FONT_PRESETS: Record<string, KeyboardFontPreset[]> = {
   default: [
     DEFAULT_FONT,
     {
