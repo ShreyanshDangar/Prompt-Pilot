@@ -1,11 +1,8 @@
-import { useRef, useState } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Settings2, X, Eye, EyeOff, RotateCcw, Keyboard, Monitor, Apple } from "lucide-react"
 import { useKeyboardStore } from "../keyboard-store"
-import type { ActiveKeyboard, PreviewMode, KeyboardPlatform } from "../keyboard-store"
-import { useEscapeKey } from "@/hooks/useEscapeKey"
-import { useClickOutside } from "@/hooks/useClickOutside"
-import { getPanelVariants, getChildVariants } from "./keyboard-popover-motion"
+import type { PreviewMode } from "../keyboard-store"
+import { usePopover } from "./usePopover"
 
 export function KeyboardSettingsPopover() {
   const isVisible = useKeyboardStore((s) => s.isVisible)
@@ -21,23 +18,8 @@ export function KeyboardSettingsPopover() {
   const previewMode = useKeyboardStore((s) => s.previewMode)
   const setPreviewMode = useKeyboardStore((s) => s.setPreviewMode)
   const resetToDefaults = useKeyboardStore((s) => s.resetToDefaults)
-  const [open, setOpen] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const reduceMotion = useReducedMotion()
-
-  useEscapeKey(
-    (e) => {
-      e.stopPropagation()
-      setOpen(false)
-    },
-    open,
-    document,
-  )
-  useClickOutside([panelRef, triggerRef], () => setOpen(false), open)
-
-  const panelVariants = getPanelVariants(reduceMotion, "right")
-  const childVariants = getChildVariants(reduceMotion)
+  const { open, setOpen, panelRef, triggerRef, reduceMotion, panelVariants, childVariants } =
+    usePopover("right")
 
   return (
     <div className="absolute right-2 top-2 z-20">
@@ -330,5 +312,3 @@ function ModeSelect({
     </div>
   )
 }
-
-export type { ActiveKeyboard, KeyboardPlatform }
