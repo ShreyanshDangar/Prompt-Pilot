@@ -3,6 +3,7 @@ import { Plus, X } from "lucide-react";
 import { useEditorStore } from "./editor-store";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import { usePendingConfirm } from "@/hooks/usePendingConfirm";
+import { useDragReorder } from "@/hooks/useDragReorder";
 
 function TabNameDisplay({
   name,
@@ -62,10 +63,12 @@ export function EditorTabBar() {
   const addTab = useEditorStore((s) => s.addTab);
   const closeTab = useEditorStore((s) => s.closeTab);
   const updateTabName = useEditorStore((s) => s.updateTabName);
+  const reorderTab = useEditorStore((s) => s.reorderTab);
   const skipDirtyCloseConfirm = useEditorStore((s) => s.skipDirtyCloseConfirm);
   const setSkipDirtyCloseConfirm = useEditorStore(
     (s) => s.setSkipDirtyCloseConfirm,
   );
+  const drag = useDragReorder(reorderTab);
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const closeConfirm = usePendingConfirm();
@@ -110,15 +113,24 @@ export function EditorTabBar() {
 
   return (
     <div className="flex shrink-0 items-center gap-0 overflow-x-auto border-b border-border bg-bg-secondary scrollbar-thin">
-      {tabs.map((tab) => (
+      {tabs.map((tab, index) => {
+        const dragProps =
+          editingTabId === tab.id ? {} : drag.getItemProps(index);
+        const isDragging = drag.dragIndex === index;
+        const isDropTarget =
+          drag.dragOverIndex === index && drag.dragIndex !== index;
+        return (
         <button
           key={tab.id}
+          {...dragProps}
           onClick={() => setActiveTab(tab.id)}
           onDoubleClick={() => handleDoubleClick(tab.id, tab.name)}
           className={`group flex shrink-0 items-center gap-2 border-r border-border px-4 py-2 text-sm transition-colors ${
             tab.id === activeTabId
               ? "bg-bg-primary text-text-primary"
               : "text-text-muted hover:bg-bg-primary/50 hover:text-text-secondary"
+          } ${isDragging ? "opacity-50" : ""} ${
+            isDropTarget ? "ring-2 ring-inset ring-accent" : ""
           }`}
         >
           {editingTabId === tab.id ? (
@@ -162,7 +174,8 @@ export function EditorTabBar() {
             </span>
           )}
         </button>
-      ))}
+        );
+      })}
       <button
         onClick={addTab}
         className="flex h-full shrink-0 items-center px-3 py-2 text-text-muted transition-colors hover:text-text-secondary"
