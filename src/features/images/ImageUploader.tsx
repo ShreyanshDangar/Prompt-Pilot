@@ -2,12 +2,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImagePlus, X, Maximize2 } from "lucide-react";
 import { useImageStore } from "./image-store";
-import type { PromptImage } from "./image-types";
 import { ImagePreviewModal } from "./ImagePreviewModal";
-import { MAX_IMAGES } from "@/lib/constants";
-import { makeId } from "@/lib/id";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { toast } from "sonner";
 
 function imageLabel(count: number) {
   return `image${count === 1 ? "" : "s"}`;
@@ -15,86 +11,29 @@ function imageLabel(count: number) {
 
 export function ImageUploader({ compact }: { compact?: boolean }) {
   const images = useImageStore((s) => s.images);
-  const addImages = useImageStore((s) => s.addImages);
+  const addImageFiles = useImageStore((s) => s.addImageFiles);
   const removeImage = useImageStore((s) => s.removeImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const processFiles = useCallback(
-    (files: FileList | File[]) => {
-      const currentCount = useImageStore.getState().images.length;
-      const remaining = MAX_IMAGES - currentCount;
-      const incoming = Array.from(files).filter((f) =>
-        f.type.startsWith("image/"),
-      );
-      if (incoming.length === 0) return;
-      if (remaining <= 0) {
-        toast.info(
-          `Per-prompt limit is ${MAX_IMAGES} ${imageLabel(MAX_IMAGES)}. Remove some to add more.`,
-        );
-        return;
-      }
-      const imageFiles = incoming.slice(0, remaining);
-      const skipped = incoming.length - imageFiles.length;
-      if (skipped > 0) {
-        toast.info(
-          `Added ${imageFiles.length} ${imageLabel(imageFiles.length)}. ${skipped} more weren't attached because the per-prompt limit is ${MAX_IMAGES}. Remove some to add more.`,
-        );
-      }
-
-      Promise.all(
-        imageFiles.map(
-          (file) =>
-            new Promise<PromptImage>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onerror = () => reject(reader.error);
-              reader.onload = (e) => {
-                const dataUrl = e.target?.result;
-                if (typeof dataUrl !== "string") {
-                  reject(new Error(`Could not read ${file.name}`));
-                  return;
-                }
-
-                const img = new Image();
-                img.onerror = () =>
-                  reject(new Error(`Could not load ${file.name}`));
-                img.onload = () => {
-                  resolve({
-                    id: makeId(),
-                    name: file.name,
-                    dataUrl,
-                    width: img.naturalWidth,
-                    height: img.naturalHeight,
-                    size: file.size,
-                  });
-                };
-                img.src = dataUrl;
-              };
-              reader.readAsDataURL(file);
-            }),
-        ),
-      )
-        .then(addImages)
-        .catch((error) => {
-          console.error("Failed to process images:", error);
-          toast.error("One or more images couldn't be processed.");
-        });
-    },
-    [addImages],
-  );
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragOver(false);
-      processFiles(e.dataTransfer.files);
+      addImageFiles(e.dataTransfer.files);
     },
-    [processFiles],
+    [addImageFiles],
   );
 
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const active = document.activeElement as HTMLElement | null;
+      const inEditor =
+        !!target?.closest?.(".ProseMirror") ||
+        !!active?.closest?.(".ProseMirror");
+      if (!inEditor) return;
       const items = e.clipboardData?.items;
       if (!items) return;
       const files: File[] = [];
@@ -105,10 +44,10 @@ export function ImageUploader({ compact }: { compact?: boolean }) {
         }
       }
       if (files.length > 0) {
-        processFiles(files);
+        addImageFiles(files);
       }
     },
-    [processFiles],
+    [addImageFiles],
   );
 
   useEffect(() => {
@@ -212,7 +151,7 @@ export function ImageUploader({ compact }: { compact?: boolean }) {
           multiple
           className="hidden"
           onChange={(e) => {
-            if (e.target.files) processFiles(e.target.files);
+            if (e.target.files) addImageFiles(e.target.files);
             e.target.value = "";
           }}
         />
@@ -257,7 +196,7 @@ export function ImageUploader({ compact }: { compact?: boolean }) {
           multiple
           className="hidden"
           onChange={(e) => {
-            if (e.target.files) processFiles(e.target.files);
+            if (e.target.files) addImageFiles(e.target.files);
             e.target.value = "";
           }}
         />
@@ -321,7 +260,7 @@ export function ImageUploader({ compact }: { compact?: boolean }) {
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files) processFiles(e.target.files);
+          if (e.target.files) addImageFiles(e.target.files);
           e.target.value = "";
         }}
       />
