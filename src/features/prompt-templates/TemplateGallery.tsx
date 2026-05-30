@@ -1,10 +1,21 @@
-import { useState, useMemo, useRef, useEffect } from "react"
-import { X, Search, GitFork, Grid3x3, List } from "lucide-react"
+import { useState, useMemo } from "react"
+import { GitFork, Grid3x3, List, Import } from "lucide-react"
 import { TEMPLATES, TEMPLATE_CATEGORIES } from "./template-data"
 import type { PromptTemplate } from "./template-data"
 import { useSlashStore } from "@/features/slash-commands/slash-store"
+import { useEditorStore } from "@/features/editor/editor-store"
+import { textToParagraphNodes } from "@/features/editor/editor-insert"
+import { VariableFillModal } from "@/features/slash-commands/VariableFillModal"
+import { extractVariables } from "@/features/slash-commands/variable-utils"
 import { toast } from "sonner"
 import { GalleryModal } from "@/components/modals/GalleryModal"
+import {
+  GalleryHeader,
+  GallerySearchField,
+  GalleryCategoryPills,
+  GalleryEmptyState,
+} from "@/components/gallery/GalleryChrome"
+import { useAutoFocusOnOpen } from "@/hooks/useAutoFocusOnOpen"
 
 interface TemplateGalleryProps {
   isOpen: boolean
@@ -14,10 +25,12 @@ interface TemplateGalleryProps {
 function TemplateCard({
   template,
   onFork,
+  onInsert,
   viewMode,
 }: {
   template: PromptTemplate
   onFork: (t: PromptTemplate) => void
+  onInsert: (t: PromptTemplate) => void
   viewMode: "grid" | "list"
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -38,13 +51,23 @@ function TemplateCard({
             {template.description}
           </p>
         </div>
-        <button
-          onClick={() => onFork(template)}
-          className="flex h-7 items-center gap-1.5 rounded-md bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
-        >
-          <GitFork className="h-3 w-3" />
-          Fork
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => onInsert(template)}
+            className="flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-xs text-white transition-colors hover:bg-accent-hover"
+            title="Insert into editor"
+          >
+            <Import className="h-3 w-3" />
+            Insert
+          </button>
+          <button
+            onClick={() => onFork(template)}
+            className="flex h-7 items-center gap-1.5 rounded-md bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
+          >
+            <GitFork className="h-3 w-3" />
+            Fork
+          </button>
+        </div>
       </div>
     )
   }
@@ -60,14 +83,24 @@ function TemplateCard({
             {template.category}
           </span>
         </div>
-        <button
-          onClick={() => onFork(template)}
-          className="flex h-7 items-center gap-1.5 rounded-md bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
-          title="Fork as slash command"
-        >
-          <GitFork className="h-3 w-3" />
-          Fork
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={() => onInsert(template)}
+            className="flex h-7 items-center gap-1.5 rounded-md bg-accent px-2.5 text-xs text-white transition-colors hover:bg-accent-hover"
+            title="Insert into editor"
+          >
+            <Import className="h-3 w-3" />
+            Insert
+          </button>
+          <button
+            onClick={() => onFork(template)}
+            className="flex h-7 items-center gap-1.5 rounded-md bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
+            title="Fork as slash command"
+          >
+            <GitFork className="h-3 w-3" />
+            Fork
+          </button>
+        </div>
       </div>
       <p className="mb-3 text-xs text-text-muted">{template.description}</p>
       <button
@@ -99,15 +132,11 @@ export function TemplateGallery({ isOpen, onClose }: TemplateGalleryProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [insertTemplate, setInsertTemplate] = useState<PromptTemplate | null>(
+    null,
+  )
   const addCommand = useSlashStore((s) => s.addCommand)
-  const searchInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      const t = window.setTimeout(() => searchInputRef.current?.focus(), 50)
-      return () => window.clearTimeout(t)
-    }
-  }, [isOpen])
+  const searchInputRef = useAutoFocusOnOpen(isOpen)
 
   const filtered = useMemo(() => {
     let result = TEMPLATES
@@ -140,33 +169,65 @@ export function TemplateGallery({ isOpen, onClose }: TemplateGalleryProps) {
     }
   }
 
+  const doInsert = (text: string, name: string) => {
+    const { activeTabId, tabs, editor, updateTabContent } =
+      useEditorStore.getState()
+    if (editor) {
+      editor
+        .chain()
+        .focus()
+        .insertContent(textToParagraphNodes(text, { keepEmpty: true }))
+        .run()
+    } else {
+      const activeTab = tabs.find((t) => t.id === activeTabId)
+      if (activeTab) {
+        const escape = (s: string) =>
+          s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        const html = text
+          .split("\n")
+          .map((line) => `<p>${escape(line) || "<br>"}</p>`)
+          .join("")
+        updateTabContent(
+          activeTabId,
+          activeTab.content ? activeTab.content + html : html,
+        )
+      }
+    }
+    onClose()
+    toast.success(`Inserted "${name}"`)
+  }
+
+  const handleInsert = (template: PromptTemplate) => {
+    if (extractVariables(template.content).length > 0) {
+      setInsertTemplate(template)
+      return
+    }
+    doInsert(template.content, template.name)
+  }
+
   return (
-    <GalleryModal open={isOpen} onClose={onClose} ariaLabel="Prompt Templates">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-lg font-semibold text-text-primary">
-              Prompt Templates
-            </h2>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-secondary"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4 text-text-muted" />
-            </button>
-          </div>
+    <>
+      {insertTemplate && (
+        <VariableFillModal
+          commandName={insertTemplate.name}
+          content={insertTemplate.content}
+          onResolve={(resolved) => {
+            doInsert(resolved, insertTemplate.name)
+            setInsertTemplate(null)
+          }}
+          onCancel={() => setInsertTemplate(null)}
+        />
+      )}
+      <GalleryModal open={isOpen} onClose={onClose} ariaLabel="Prompt Templates">
+          <GalleryHeader title="Prompt Templates" onClose={onClose} />
 
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-bg-primary px-3 py-1.5">
-              <Search className="h-4 w-4 text-text-muted" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-text-primary outline-none"
-                placeholder="Search templates..."
-              />
-            </div>
+            <GallerySearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search templates..."
+              inputRef={searchInputRef}
+            />
             <div className="flex gap-1">
               <button
                 onClick={() => setViewMode("grid")}
@@ -193,31 +254,11 @@ export function TemplateGallery({ isOpen, onClose }: TemplateGalleryProps) {
             </div>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto border-b border-border px-4 py-2 scrollbar-thin">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
-                selectedCategory === null
-                  ? "bg-accent text-white"
-                  : "bg-bg-secondary text-text-secondary hover:bg-bg-primary"
-              }`}
-            >
-              All
-            </button>
-            {TEMPLATE_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
-                  selectedCategory === cat
-                    ? "bg-accent text-white"
-                    : "bg-bg-secondary text-text-secondary hover:bg-bg-primary"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <GalleryCategoryPills
+            categories={TEMPLATE_CATEGORIES}
+            selected={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
 
           <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
             <div
@@ -232,16 +273,16 @@ export function TemplateGallery({ isOpen, onClose }: TemplateGalleryProps) {
                   key={template.id}
                   template={template}
                   onFork={handleFork}
+                  onInsert={handleInsert}
                   viewMode={viewMode}
                 />
               ))}
             </div>
             {filtered.length === 0 && (
-              <div className="py-12 text-center text-sm text-text-muted">
-                No templates found
-              </div>
+              <GalleryEmptyState>No templates found</GalleryEmptyState>
             )}
           </div>
-    </GalleryModal>
+      </GalleryModal>
+    </>
   )
 }
