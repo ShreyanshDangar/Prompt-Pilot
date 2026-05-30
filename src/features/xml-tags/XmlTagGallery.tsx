@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Search, Plus, Trash2, Copy, Check } from "lucide-react"
+import { Plus, Trash2, Copy, Check } from "lucide-react"
 import { useXmlTagsStore } from "./xml-tags-store"
 import { XML_TAG_CATEGORIES } from "./xml-tag-data"
 import type { XmlTag } from "./xml-tag-data"
@@ -9,6 +9,13 @@ import { GalleryModal } from "@/components/modals/GalleryModal"
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { usePendingConfirm } from "@/hooks/usePendingConfirm"
+import {
+  GalleryHeader,
+  GallerySearchField,
+  GalleryCategoryPills,
+  GalleryEmptyState,
+} from "@/components/gallery/GalleryChrome"
+import { useAutoFocusOnOpen } from "@/hooks/useAutoFocusOnOpen"
 
 function TagCard({
   tag,
@@ -89,14 +96,7 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
   const [newTagDescription, setNewTagDescription] = useState("")
   const [newTagCategory, setNewTagCategory] = useState("Basic Structure")
   const tagConfirm = usePendingConfirm()
-  const searchInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      const t = window.setTimeout(() => searchInputRef.current?.focus(), 50)
-      return () => window.clearTimeout(t)
-    }
-  }, [isOpen])
+  const searchInputRef = useAutoFocusOnOpen(isOpen)
 
   const filtered = useMemo(() => {
     let result = searchTags(searchQuery)
@@ -107,9 +107,9 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
   }, [searchQuery, selectedCategory, searchTags])
 
   const handleInsert = (tag: XmlTag) => {
-    const snippet = `<${tag.name}>\n\n</${tag.name}>`
-    onInsertTag(snippet)
+    onInsertTag(tag.name)
     toast.success(`Inserted <${tag.name}>`)
+    onClose()
   }
 
   const handleAddCustomTag = () => {
@@ -141,31 +141,15 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
   return (
     <>
     <GalleryModal open={isOpen} onClose={onClose} ariaLabel="XML Tags">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-lg font-semibold text-text-primary">
-              XML Tags
-            </h2>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-bg-secondary"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4 text-text-muted" />
-            </button>
-          </div>
+          <GalleryHeader title="XML Tags" onClose={onClose} />
 
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-bg-primary px-3 py-1.5">
-              <Search className="h-4 w-4 text-text-muted" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-text-primary outline-none"
-                placeholder="Search tags..."
-              />
-            </div>
+            <GallerySearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search tags..."
+              inputRef={searchInputRef}
+            />
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${
@@ -224,31 +208,11 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
             )}
           </AnimatePresence>
 
-          <div className="flex gap-2 overflow-x-auto border-b border-border px-4 py-2 scrollbar-thin">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
-                selectedCategory === null
-                  ? "bg-accent text-white"
-                  : "bg-bg-secondary text-text-secondary hover:bg-bg-primary"
-              }`}
-            >
-              All
-            </button>
-            {XML_TAG_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`shrink-0 rounded-full px-3 py-1 text-xs transition-colors ${
-                  selectedCategory === cat
-                    ? "bg-accent text-white"
-                    : "bg-bg-secondary text-text-secondary hover:bg-bg-primary"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <GalleryCategoryPills
+            categories={XML_TAG_CATEGORIES}
+            selected={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
 
           <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -263,9 +227,7 @@ export function XmlTagGallery({ isOpen, onClose, onInsertTag }: XmlTagGalleryPro
               ))}
             </div>
             {filtered.length === 0 && (
-              <div className="py-12 text-center text-sm text-text-muted">
-                No tags found
-              </div>
+              <GalleryEmptyState>No tags found</GalleryEmptyState>
             )}
           </div>
     </GalleryModal>
