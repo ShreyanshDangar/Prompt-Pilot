@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ImagePlus } from "lucide-react";
 import { useEditorStore } from "./editor-store";
 import { useGlobalStore } from "@/stores/global-store";
 import { EditorTabBar } from "./EditorTabBar";
@@ -10,6 +11,7 @@ import { OpenInDropdown } from "@/features/open-in/OpenInDropdown";
 import { SlashCommandPopover } from "@/features/slash-commands/SlashCommandPopover";
 import { XmlTagAutocompletePopover } from "@/features/xml-tags/XmlTagAutocompletePopover";
 import { ImageUploader } from "@/features/images/ImageUploader";
+import { useImageStore } from "@/features/images/image-store";
 import { ThemeVideo } from "@/components/ThemeVideo";
 
 function CharWordCount() {
@@ -73,6 +75,40 @@ export function Editor() {
   const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
     null,
   );
+  const addImageFiles = useImageStore((s) => s.addImageFiles);
+  const [isImageDragOver, setIsImageDragOver] = useState(false);
+  const dragDepth = useRef(0);
+
+  const dragHasFiles = (e: React.DragEvent) =>
+    Array.from(e.dataTransfer?.types ?? []).includes("Files");
+
+  const handleRegionDragEnter = (e: React.DragEvent) => {
+    if (!dragHasFiles(e)) return;
+    dragDepth.current += 1;
+    setIsImageDragOver(true);
+  };
+
+  const handleRegionDragOver = (e: React.DragEvent) => {
+    if (!dragHasFiles(e)) return;
+    e.preventDefault();
+  };
+
+  const handleRegionDragLeave = (e: React.DragEvent) => {
+    if (!dragHasFiles(e)) return;
+    dragDepth.current -= 1;
+    if (dragDepth.current <= 0) {
+      dragDepth.current = 0;
+      setIsImageDragOver(false);
+    }
+  };
+
+  const handleRegionDrop = (e: React.DragEvent) => {
+    if (!dragHasFiles(e)) return;
+    e.preventDefault();
+    dragDepth.current = 0;
+    setIsImageDragOver(false);
+    addImageFiles(e.dataTransfer.files);
+  };
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const initialCursor = activeTab?.cursorPosition ?? 0;
@@ -129,7 +165,13 @@ export function Editor() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <EditorTabBar />
-      <div className="relative flex flex-1 flex-col overflow-hidden">
+      <div
+        className="relative flex flex-1 flex-col overflow-hidden"
+        onDragEnter={handleRegionDragEnter}
+        onDragOver={handleRegionDragOver}
+        onDragLeave={handleRegionDragLeave}
+        onDrop={handleRegionDrop}
+      >
         <ThemeVideo slot="editor" className="opacity-20 z-0" />
         <AnimatePresence mode="wait">
           <motion.div
@@ -167,6 +209,22 @@ export function Editor() {
             />
           </>
         )}
+        <AnimatePresence>
+          {isImageDragOver && (
+            <motion.div
+              className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-accent bg-bg-primary/80 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ImagePlus className="h-10 w-10 text-accent" />
+              <span className="text-sm font-medium text-text-primary">
+                Drop images to attach
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <EditorToolbar />
     </div>
