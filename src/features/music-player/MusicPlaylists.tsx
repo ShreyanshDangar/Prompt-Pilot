@@ -4,7 +4,7 @@ import {
   CheckSquare, Square, Pencil, Check,
 } from "lucide-react";
 import { useMusicStore } from "./music-store";
-import type { Playlist } from "./music-types";
+import type { Playlist, Track } from "./music-types";
 import { NowPlayingBars } from "./NowPlayingBars";
 import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import { useClickOutside } from "@/hooks/useClickOutside";
@@ -258,8 +258,10 @@ export function PlaylistsTab() {
   const playlistConfirm = usePendingConfirm();
 
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
-  const displayTracks = activePlaylist
-    ? tracks.filter((t) => activePlaylist.trackIds.includes(t.id))
+  const displayTracks: Track[] = activePlaylist
+    ? activePlaylist.trackIds
+        .map((id) => tracks.find((t) => t.id === id))
+        .filter((t): t is Track => Boolean(t))
     : tracks;
 
   const handleCreatePlaylist = () => {
