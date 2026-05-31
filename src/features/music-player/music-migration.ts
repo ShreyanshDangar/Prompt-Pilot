@@ -33,84 +33,91 @@ export async function migrateLegacyStorageOnce(): Promise<void> {
     return
   }
 
-  try {
-    const legacyTracksRaw = getFromLocalStorage<unknown>(LEGACY_LOCAL_TRACKS_KEY)
-    if (Array.isArray(legacyTracksRaw)) {
-      const tracks: StoredLocalTrack[] = []
-      legacyTracksRaw.forEach((entry, idx) => {
-        if (!entry || typeof entry !== "object") return
-        const meta = entry as Record<string, unknown>
-        const id = typeof meta.id === "string" ? meta.id : null
-        const title = typeof meta.title === "string" ? meta.title : null
-        const fileId = typeof meta.fileId === "string" ? meta.fileId : null
-        if (!id || !title || !fileId) return
-        tracks.push({
-          id,
-          title,
-          fileId,
-          mimeType: typeof meta.mimeType === "string" ? meta.mimeType : undefined,
-          sizeBytes:
-            typeof meta.sizeBytes === "number" ? meta.sizeBytes : undefined,
-          sortIndex: idx,
-        })
-      })
-      if (tracks.length > 0) await putLocalTracks(tracks)
-    }
-  } catch {
-    // best-effort: legacy migration is non-critical
-  }
-
-  try {
-    const legacyPlaylistsRaw = getFromLocalStorage<unknown>(LEGACY_PLAYLISTS_KEY)
-    if (Array.isArray(legacyPlaylistsRaw)) {
-      const now = Date.now()
-      for (const entry of legacyPlaylistsRaw) {
-        if (!entry || typeof entry !== "object") continue
-        const meta = entry as Record<string, unknown>
-        const id = typeof meta.id === "string" ? meta.id : null
-        const name = typeof meta.name === "string" ? meta.name : null
-        const trackIds = Array.isArray(meta.trackIds)
-          ? (meta.trackIds.filter((t) => typeof t === "string") as string[])
-          : []
-        if (!id || !name) continue
-        await putPlaylist({
-          id,
-          name,
-          trackIds,
-          createdAt: now,
-          updatedAt: now,
-        })
-      }
-    }
-  } catch {
-    // best-effort: legacy migration is non-critical
-  }
-
-  try {
-    const legacyState = getFromLocalStorage<PersistedMusicState>(
-      LEGACY_MUSIC_STATE_KEY,
-    )
-    if (legacyState) {
-      if (typeof legacyState.volume === "number")
-        await putSetting(SETTING_VOLUME, legacyState.volume)
-      if (typeof legacyState.shuffle === "boolean")
-        await putSetting(SETTING_SHUFFLE, legacyState.shuffle)
-      if (
-        legacyState.repeat === "off" ||
-        legacyState.repeat === "single" ||
-        legacyState.repeat === "all"
-      )
-        await putSetting(SETTING_REPEAT, legacyState.repeat)
-      if (Array.isArray(legacyState.trackOrder))
-        await putSetting(SETTING_TRACK_ORDER, legacyState.trackOrder)
-    }
-  } catch {
-    // best-effort: legacy migration is non-critical
-  }
+  await migrateTracks()
+  await migratePlaylists()
+  await migrateSettings()
 
   try {
     window.localStorage.setItem(MIGRATION_FLAG_KEY, "1")
   } catch {
-    // best-effort: legacy migration is non-critical
+    return
+  }
+}
+
+async function migrateTracks(): Promise<void> {
+  try {
+    const legacyTracksRaw = getFromLocalStorage<unknown>(LEGACY_LOCAL_TRACKS_KEY)
+    if (!Array.isArray(legacyTracksRaw)) return
+    const tracks: StoredLocalTrack[] = []
+    legacyTracksRaw.forEach((entry, idx) => {
+      if (!entry || typeof entry !== "object") return
+      const meta = entry as Record<string, unknown>
+      const id = typeof meta.id === "string" ? meta.id : null
+      const title = typeof meta.title === "string" ? meta.title : null
+      const fileId = typeof meta.fileId === "string" ? meta.fileId : null
+      if (!id || !title || !fileId) return
+      tracks.push({
+        id,
+        title,
+        fileId,
+        mimeType: typeof meta.mimeType === "string" ? meta.mimeType : undefined,
+        sizeBytes:
+          typeof meta.sizeBytes === "number" ? meta.sizeBytes : undefined,
+        sortIndex: idx,
+      })
+    })
+    if (tracks.length > 0) await putLocalTracks(tracks)
+  } catch {
+    return
+  }
+}
+
+async function migratePlaylists(): Promise<void> {
+  try {
+    const legacyPlaylistsRaw = getFromLocalStorage<unknown>(LEGACY_PLAYLISTS_KEY)
+    if (!Array.isArray(legacyPlaylistsRaw)) return
+    const now = Date.now()
+    for (const entry of legacyPlaylistsRaw) {
+      if (!entry || typeof entry !== "object") continue
+      const meta = entry as Record<string, unknown>
+      const id = typeof meta.id === "string" ? meta.id : null
+      const name = typeof meta.name === "string" ? meta.name : null
+      const trackIds = Array.isArray(meta.trackIds)
+        ? (meta.trackIds.filter((t) => typeof t === "string") as string[])
+        : []
+      if (!id || !name) continue
+      await putPlaylist({
+        id,
+        name,
+        trackIds,
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+  } catch {
+    return
+  }
+}
+
+async function migrateSettings(): Promise<void> {
+  try {
+    const legacyState = getFromLocalStorage<PersistedMusicState>(
+      LEGACY_MUSIC_STATE_KEY,
+    )
+    if (!legacyState) return
+    if (typeof legacyState.volume === "number")
+      await putSetting(SETTING_VOLUME, legacyState.volume)
+    if (typeof legacyState.shuffle === "boolean")
+      await putSetting(SETTING_SHUFFLE, legacyState.shuffle)
+    if (
+      legacyState.repeat === "off" ||
+      legacyState.repeat === "single" ||
+      legacyState.repeat === "all"
+    )
+      await putSetting(SETTING_REPEAT, legacyState.repeat)
+    if (Array.isArray(legacyState.trackOrder))
+      await putSetting(SETTING_TRACK_ORDER, legacyState.trackOrder)
+  } catch {
+    return
   }
 }
