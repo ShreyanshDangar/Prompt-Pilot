@@ -23,7 +23,7 @@ export type StoredPlaylist = {
   updatedAt: number
 }
 
-export type StoredSetting<T = unknown> = {
+type StoredSetting<T = unknown> = {
   key: string
   value: T
 }
@@ -138,10 +138,6 @@ export async function getAllLocalTracks(): Promise<StoredLocalTrack[]> {
   )
   const list = (result ?? []) as StoredLocalTrack[]
   return list.sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
-}
-
-export async function putLocalTrack(track: StoredLocalTrack): Promise<void> {
-  await withStore(TRACKS_STORE, "readwrite", (store) => store.put(track))
 }
 
 export async function putLocalTracks(
