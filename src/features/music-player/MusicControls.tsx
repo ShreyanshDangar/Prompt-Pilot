@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Volume1, Shuffle,
   Repeat, Repeat1, ListPlus, CheckSquare,
@@ -38,6 +39,11 @@ export function MusicControls({
 
   const RepeatIcon = repeat === "single" ? Repeat1 : Repeat;
   const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
+
+  const prevVolumeRef = useRef(volume || 0.7);
+  useEffect(() => {
+    if (volume > 0) prevVolumeRef.current = volume;
+  }, [volume]);
 
   return (
     <>
@@ -85,7 +91,9 @@ export function MusicControls({
 
       <div className="mb-3 flex items-center gap-2">
         <button
-          onClick={() => setVolume(volume === 0 ? 0.7 : 0)}
+          onClick={() =>
+            setVolume(volume === 0 ? prevVolumeRef.current || 0.7 : 0)
+          }
           className="shrink-0 text-text-muted"
           aria-label="Toggle mute"
         >
