@@ -77,6 +77,9 @@ export const ProgressAndSeek = memo(function ProgressAndSeek({
           onTouchEnd={(e) =>
             handleSeekCommit(Number((e.target as HTMLInputElement).value))
           }
+          onKeyUp={(e) =>
+            handleSeekCommit(Number((e.target as HTMLInputElement).value))
+          }
           className="h-1 w-full cursor-pointer appearance-none rounded-full bg-bg-secondary accent-accent [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent"
         />
       </div>
