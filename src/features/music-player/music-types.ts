@@ -8,14 +8,6 @@ export interface Track {
   sizeBytes?: number
 }
 
-export interface PersistedLocalTrack {
-  id: string
-  title: string
-  fileId: string
-  mimeType?: string
-  sizeBytes?: number
-}
-
 export interface Playlist {
   id: string
   name: string
