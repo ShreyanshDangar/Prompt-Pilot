@@ -1,7 +1,71 @@
 import { useState } from "react"
-import { X, Star, Plus } from "lucide-react"
+import { X, Star, Plus, Copy, Check } from "lucide-react"
 import { useProjectsStore } from "./projects-store"
+import { PROJECT_STATUS_META } from "./projects-types"
+import type { PromptVersion, Project } from "./projects-types"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { toast } from "sonner"
+
+function VersionRow({
+  version,
+  index,
+  onDelete,
+}: {
+  version: PromptVersion
+  index: number
+  onDelete: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const { copied, copy } = useCopyToClipboard()
+
+  return (
+    <div className="group flex items-start gap-2 rounded-md border border-border bg-bg-primary px-2.5 py-1.5">
+      <span className="mt-0.5 shrink-0 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+        v{index + 1}
+      </span>
+      <button
+        onClick={() => setExpanded((e) => !e)}
+        className="min-w-0 flex-1 text-left text-xs text-text-secondary"
+        title={expanded ? "Collapse" : "Expand"}
+      >
+        <span
+          className={
+            expanded
+              ? "block whitespace-pre-wrap break-words"
+              : "block truncate"
+          }
+        >
+          {version.text}
+        </span>
+      </button>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <button
+          onClick={() =>
+            copy(version.text, {
+              successMessage: "Version copied to clipboard",
+              errorMessage: "Failed to copy",
+            })
+          }
+          className="flex h-5 w-5 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
+          aria-label="Copy version"
+        >
+          {copied ? (
+            <Check className="h-3 w-3 text-success" />
+          ) : (
+            <Copy className="h-3 w-3" />
+          )}
+        </button>
+        <button
+          onClick={onDelete}
+          className="flex h-5 w-5 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
+          aria-label="Remove version"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function ProjectDetail() {
   const projects = useProjectsStore((s) => s.projects)
@@ -26,7 +90,22 @@ export function ProjectDetail() {
         {project.name}
       </h3>
       <div className="mb-4 flex items-center gap-2 text-xs text-text-muted">
-        <span className="rounded bg-bg-secondary px-2 py-0.5">{project.status}</span>
+        <select
+          value={project.status}
+          onChange={(e) =>
+            updateProject(project.id, {
+              status: e.target.value as Project["status"],
+            })
+          }
+          className="rounded bg-bg-secondary px-2 py-0.5 text-xs text-text-secondary focus:outline-none"
+          aria-label="Project status"
+        >
+          {PROJECT_STATUS_META.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
         <span>{new Date(project.updatedAt).toLocaleDateString()}</span>
       </div>
 
@@ -164,28 +243,18 @@ export function ProjectDetail() {
         )}
         <div className="space-y-1">
           {project.promptVersions.map((v, idx) => (
-            <div
+            <VersionRow
               key={v.id}
-              className="group flex items-start gap-2 rounded-md border border-border bg-bg-primary px-2.5 py-1.5"
-            >
-              <span className="mt-0.5 shrink-0 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
-                v{idx + 1}
-              </span>
-              <span className="flex-1 truncate text-xs text-text-secondary">
-                {v.text}
-              </span>
-              <button
-                onClick={() =>
-                  updateProject(project.id, {
-                    promptVersions: project.promptVersions.filter((pv) => pv.id !== v.id),
-                  })
-                }
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-muted opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
-                aria-label="Remove version"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
+              version={v}
+              index={idx}
+              onDelete={() =>
+                updateProject(project.id, {
+                  promptVersions: project.promptVersions.filter(
+                    (pv) => pv.id !== v.id,
+                  ),
+                })
+              }
+            />
           ))}
         </div>
       </div>
