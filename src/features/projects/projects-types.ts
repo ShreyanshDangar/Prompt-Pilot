@@ -26,3 +26,12 @@ export interface PromptVersion {
   text: string
   createdAt: number
 }
+
+export const PROJECT_STATUS_META: {
+  value: Project["status"]
+  label: string
+}[] = [
+  { value: "draft", label: "Draft" },
+  { value: "active", label: "In Progress" },
+  { value: "archived", label: "Done" },
+]
