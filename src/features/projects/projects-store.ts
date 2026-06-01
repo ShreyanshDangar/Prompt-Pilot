@@ -15,7 +15,7 @@ interface ProjectsStore {
   isOpen: boolean
   initialize: () => Promise<void>
   setOpen: (open: boolean) => void
-  createFolder: (name: string) => void
+  createFolder: (name: string) => ProjectFolder
   renameFolder: (id: string, name: string) => void
   deleteFolder: (id: string) => void
   createProject: (folderId: string, name: string) => void
@@ -53,6 +53,7 @@ export const useProjectsStore = create<ProjectsStore>((set, get) => ({
     }
     set((s) => ({ folders: [...s.folders, folder] }))
     get().persist()
+    return folder
   },
 
   renameFolder: (id, name) => {
