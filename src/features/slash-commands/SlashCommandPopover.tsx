@@ -85,23 +85,24 @@ export const SlashCommandPopover = forwardRef<
 
   const handleVariableResolve = useCallback(
     (resolved: string) => {
-      if (deleteRange) {
-        editor
-          .chain()
-          .focus()
-          .deleteRange(deleteRange)
-          .insertContent(resolved)
-          .run()
+      const chain = deleteRange
+        ? editor.chain().focus().deleteRange(deleteRange)
+        : editor.chain().focus()
+
+      if (slashInsertionMode === "block") {
+        chain.insertContent(textToParagraphNodes(resolved))
       } else {
-        editor.chain().focus().insertContent(resolved).run()
+        chain.insertContent(resolved)
       }
+
+      chain.run()
       if (pendingCommand) {
         incrementUsage(pendingCommand.name)
       }
       setPendingCommand(null)
       setDeleteRange(null)
     },
-    [editor, deleteRange, pendingCommand, incrementUsage]
+    [editor, deleteRange, pendingCommand, incrementUsage, slashInsertionMode]
   )
 
   useImperativeHandle(ref, () => ({ handleKeyDown: autocomplete.handleKeyDown }))
