@@ -10,10 +10,14 @@ import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { toast } from "sonner"
 import { BUILT_IN_COMMANDS } from "@/features/slash-commands/built-in-commands"
 import { runBuiltInCommand } from "@/features/slash-commands/run-built-in-command"
+import { extractVariables } from "@/features/slash-commands/variable-utils"
+import { VariableFillModal } from "@/features/slash-commands/VariableFillModal"
 import type { SlashCommand } from "@/features/slash-commands/slash-types"
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
+  const [pendingCommand, setPendingCommand] = useState<SlashCommand | null>(null)
+  const [search, setSearch] = useState("")
   const toggleSettingsPanel = useGlobalStore((s) => s.toggleSettingsPanel)
   const setActivePanel = useGlobalStore((s) => s.setActivePanel)
   const addTab = useEditorStore((s) => s.addTab)
@@ -27,6 +31,15 @@ export function CommandPalette() {
   const commands = useMemo(
     () => [...BUILT_IN_COMMANDS, ...userCommands],
     [userCommands],
+  )
+
+  const mostUsed = useMemo(
+    () =>
+      commands
+        .filter((c) => c.usageCount > 0)
+        .sort((a, b) => b.usageCount - a.usageCount)
+        .slice(0, 5),
+    [commands],
   )
 
   const runSlashCommand = (cmd: SlashCommand) => {
@@ -44,17 +57,26 @@ export function CommandPalette() {
       return
     }
     if (cmd.content) {
-      const editor = useEditorStore.getState().editor
-      if (editor) {
-        editor.chain().focus().insertContent(cmd.content).run()
-        incrementUsage(cmd.name)
-        toast.success(`Inserted ${cmd.name}`)
-      } else {
-        navigator.clipboard.writeText(cmd.content).catch(() => {})
-        toast.success(`${cmd.name} content copied to clipboard`)
+      if (extractVariables(cmd.content).length > 0) {
+        setOpen(false)
+        setPendingCommand(cmd)
+        return
       }
+      insertCommandContent(cmd.name, cmd.content)
     }
     setOpen(false)
+  }
+
+  const insertCommandContent = (name: string, content: string) => {
+    const editor = useEditorStore.getState().editor
+    if (editor) {
+      editor.chain().focus().insertContent(content).run()
+      incrementUsage(name)
+      toast.success(`Inserted ${name}`)
+    } else {
+      navigator.clipboard.writeText(content).catch(() => {})
+      toast.success(`${name} content copied to clipboard`)
+    }
   }
 
   useEffect(() => {
@@ -77,14 +99,28 @@ export function CommandPalette() {
   }
 
   return (
-    <CenteredModal
-      open={open}
-      onClose={() => setOpen(false)}
-      ariaLabel="Command Palette"
-    >
+    <>
+      {pendingCommand && (
+        <VariableFillModal
+          commandName={pendingCommand.name}
+          content={pendingCommand.content}
+          onResolve={(resolved) => {
+            insertCommandContent(pendingCommand.name, resolved)
+            setPendingCommand(null)
+          }}
+          onCancel={() => setPendingCommand(null)}
+        />
+      )}
+      <CenteredModal
+        open={open}
+        onClose={() => setOpen(false)}
+        ariaLabel="Command Palette"
+      >
       <Command className="flex flex-col" label="Command Palette">
         <div className="border-b border-border px-4 py-3">
           <Command.Input
+            value={search}
+            onValueChange={setSearch}
             placeholder="Type a command or search..."
             className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
             autoFocus
@@ -94,6 +130,28 @@ export function CommandPalette() {
           <Command.Empty className="px-4 py-6 text-center text-sm text-text-muted">
             No results found.
           </Command.Empty>
+
+          {search.trim() === "" && mostUsed.length > 0 && (
+            <Command.Group
+              heading="Most used"
+              className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-muted"
+            >
+              {mostUsed.map((cmd) => (
+                <Command.Item
+                  key={`recent:${cmd.name}`}
+                  value={`recent:${cmd.name}`}
+                  onSelect={() => runSlashCommand(cmd)}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-text-primary transition-colors data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent"
+                >
+                  <Slash className="h-4 w-4 text-text-muted" />
+                  <span className="flex-1">{cmd.name}</span>
+                  <span className="text-xs text-text-muted">
+                    used {cmd.usageCount}&times;
+                  </span>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
 
           <Command.Group
             heading="Actions"
@@ -166,6 +224,7 @@ export function CommandPalette() {
           </Command.Group>
         </Command.List>
       </Command>
-    </CenteredModal>
+      </CenteredModal>
+    </>
   )
 }
