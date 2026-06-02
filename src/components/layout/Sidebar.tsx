@@ -38,6 +38,9 @@ export function Sidebar() {
   const setProjectsOpen = useProjectsStore((s) => s.setOpen);
   const setChainingOpen = useChainingStore((s) => s.setOpen);
   const toggleKeyboard = useKeyboardStore((s) => s.toggleVisible);
+  const projectsOpen = useProjectsStore((s) => s.isOpen);
+  const chainingOpen = useChainingStore((s) => s.isOpen);
+  const keyboardVisible = useKeyboardStore((s) => s.isVisible);
   const userCommands = useSlashStore((s) => s.userCommands);
   const isCreateModalOpen = useSlashStore((s) => s.isCreateModalOpen);
   const websiteTheme = useGlobalStore((s) => s.settings.websiteTheme);
@@ -141,20 +144,31 @@ export function Sidebar() {
               </button>
             </div>
             <nav className="relative z-10 flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2 scrollbar-thin">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={item.onClick}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                    activePanel === item.id
-                      ? "bg-accent/10 text-accent"
-                      : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
+              {navItems.map((item) => {
+                const foregroundId = projectsOpen
+                  ? "projects"
+                  : chainingOpen
+                    ? "chains"
+                    : activePanel;
+                const isActive =
+                  item.id === "keyboard"
+                    ? keyboardVisible
+                    : foregroundId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={item.onClick}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                      isActive
+                        ? "bg-accent/10 text-accent"
+                        : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                );
+              })}
 
               <button
                 onClick={() => setSlashGalleryOpen(true)}
