@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Calculator, Palette } from "lucide-react";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { RightPanelToggle, type RightPanelSection } from "./RightPanelToggle";
@@ -126,21 +127,38 @@ export function AppShell() {
   };
 
   const handleInsertXmlTag = useCallback(
-    (tagText: string) => {
+    (tagName: string) => {
       const { activeTabId, tabs, editor } = useEditorStore.getState();
       const activeTab = tabs.find((t) => t.id === activeTabId);
       if (!activeTab) return;
+      const openTag = `<${tagName}>`;
+      const closeTag = `</${tagName}>`;
+      const snippet = `${openTag}\n\n${closeTag}`;
       if (editor) {
-        editor
-          .chain()
-          .focus()
-          .insertContent(textToParagraphNodes(tagText, { keepEmpty: true }))
-          .run();
+        const { from, to } = editor.state.selection;
+        if (from !== to) {
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(to, [{ type: "text", text: closeTag }])
+            .insertContentAt(from, [{ type: "text", text: openTag }])
+            .setTextSelection({
+              from: from + openTag.length,
+              to: to + openTag.length,
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .insertContent(textToParagraphNodes(snippet, { keepEmpty: true }))
+            .run();
+        }
         return;
       }
       const escape = (s: string) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const htmlTag = tagText
+      const htmlTag = snippet
         .split("\n")
         .map((line) => `<p>${escape(line) || "<br>"}</p>`)
         .join("");
@@ -249,9 +267,21 @@ export function AppShell() {
                       </div>
                     </div>
                     {!showCalcContent && !showStylerContent && (
-                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
-                        <p className="text-xs text-text-muted">
-                          Select a panel above
+                      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                        <div className="flex gap-2 text-text-muted">
+                          <Calculator className="h-6 w-6" />
+                          <Palette className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm font-medium text-text-secondary">
+                          Nothing selected
+                        </p>
+                        <p className="max-w-[16rem] text-xs text-text-muted">
+                          Toggle{" "}
+                          <span className="text-text-secondary">Tokens</span> to
+                          estimate context usage, or{" "}
+                          <span className="text-text-secondary">Styler</span> to
+                          fine-tune the editor&rsquo;s look. Pick one above to
+                          get started.
                         </p>
                       </div>
                     )}
