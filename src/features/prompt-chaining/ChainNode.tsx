@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Trash2, ArrowRight, GripVertical } from "lucide-react"
+import { Trash2, ArrowRight, GripVertical, FileInput } from "lucide-react"
+import { toast } from "sonner"
 import { useChainingStore } from "./chaining-store"
+import { useEditorStore } from "@/features/editor/editor-store"
+import { textToParagraphNodes } from "@/features/editor/editor-insert"
 
 export function ChainNode({
   step,
@@ -34,6 +37,25 @@ export function ChainNode({
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(step.promptText)
 
+  const handleSendToEditor = () => {
+    if (!step.promptText.trim()) {
+      toast.error("This step has no text")
+      return
+    }
+    const editor = useEditorStore.getState().editor
+    if (!editor) {
+      toast.error("Editor is not ready")
+      return
+    }
+    editor
+      .chain()
+      .focus("end")
+      .insertContent(textToParagraphNodes(step.promptText, { keepEmpty: true }))
+      .run()
+    useChainingStore.getState().setOpen(false)
+    toast.success("Step sent to editor")
+  }
+
   return (
     <div
       className="flex items-start gap-3"
@@ -42,7 +64,7 @@ export function ChainNode({
       onDrop={() => onDrop(index)}
     >
       <motion.div
-        className={`flex w-64 flex-col rounded-lg border bg-bg-primary p-3 shadow-sm transition-colors ${
+        className={`group flex w-64 flex-col rounded-lg border bg-bg-primary p-3 shadow-sm transition-colors ${
           isDragOver ? "border-accent" : "border-border"
         } ${isDragging ? "opacity-50" : ""}`}
         layout
@@ -71,13 +93,23 @@ export function ChainNode({
               {step.name}
             </span>
           </div>
-          <button
-            onClick={() => onRequestDelete(step.id)}
-            className="flex h-5 w-5 items-center justify-center rounded text-text-muted transition-colors hover:bg-error/10 hover:text-error"
-            aria-label="Remove step"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleSendToEditor}
+              className="flex h-5 w-5 items-center justify-center rounded text-text-muted opacity-0 transition hover:text-accent group-hover:opacity-100"
+              aria-label="Send step to editor"
+              title="Send to editor"
+            >
+              <FileInput className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => onRequestDelete(step.id)}
+              className="flex h-5 w-5 items-center justify-center rounded text-text-muted transition-colors hover:bg-error/10 hover:text-error"
+              aria-label="Remove step"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
         </div>
         {editing ? (
           <div>
@@ -89,7 +121,10 @@ export function ChainNode({
             />
             <div className="mt-1 flex justify-end gap-1">
               <button
-                onClick={() => setEditing(false)}
+                onClick={() => {
+                  setEditText(step.promptText)
+                  setEditing(false)
+                }}
                 className="rounded px-2 py-0.5 text-xs text-text-muted hover:bg-bg-secondary"
               >
                 Cancel
@@ -107,7 +142,10 @@ export function ChainNode({
           </div>
         ) : (
           <button
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              setEditText(step.promptText)
+              setEditing(true)
+            }}
             className="text-left text-xs text-text-muted transition-colors hover:text-text-secondary"
           >
             {step.promptText
