@@ -43,6 +43,7 @@ export function useSessionRestore() {
 
   useEffect(() => {
     const save = () => {
+      useEditorStore.getState().markAllTabsSaved()
       const editorState = useEditorStore.getState()
       const globalState = useGlobalStore.getState()
 
